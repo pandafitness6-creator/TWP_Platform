@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-02",
+  "checked_files": 332,
+  "decoded_source_media": 1047,
+  "result": "No personal-name/path markers, original backend reference, actual API keys or JWTs found in packaged content. Binary media inspected as raw ASCII/UTF-16 metadata; base64 substring coincidences are excluded. Git bundle checked separately by its reconstructed source and neutral commit metadata.",
+  "excluded": [
+    "private environment files",
+    "account caches",
+    "node_modules",
+    "original browser evidence",
+    "original deployment files",
+    "raw historical snapshots (included in sanitized Git bundle)"
+  ]
+}

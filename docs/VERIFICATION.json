@@ -1,0 +1,41 @@
+{
+  "date": "2026-10-02",
+  "checks": [
+    "All 22 migrations install into a fresh PostgreSQL test database",
+    "No customer or coach accounts seeded",
+    "All three v0.9.16 training articles seeded",
+    "RLS enabled; anonymous record reads denied",
+    "Migration 020 rerun preserves article records and coach edits",
+    "Migrations 021 and 022 upgrade an existing install: no expiry, no timezone (default Asia/Colombo), records and access unchanged; 022 re-runs safely",
+    "Client with no expiry date signs in and reads data as before (state ok, no days left)",
+    "Expiry, country and timezone set at creation are copied to the account; the last day is fully usable (days left 0)",
+    "Timezone boundary: open until 23:59:59 on the last day and closed from 00:00 the next day, in the client zone (Dubai 20:00 UTC, Colombo 18:30 UTC)",
+    "Expired client: RLS blocks records, events, saves and chat for an already-issued session; status reports expired",
+    "Two clients with the same date in different timezones expire at different moments (24 hours apart)",
+    "Daylight saving: America/New_York ends at 05:00 UTC in winter and 04:00 UTC in summer; local last day open, day after closed",
+    "No timezone set: the default timezone setting is used (and Asia/Colombo when none is set)",
+    "Invalid timezones (not IANA) and countries are rejected for client profiles, the default setting and accounts",
+    "Renewing or removing the expiry date restores access without a new login",
+    "Paused and archived clients are blocked and reported as paused / archived (status takes precedence over expiry)",
+    "RLS: a client reads only its own account row, cannot change its expiry date, country or timezone; anonymous callers cannot query access status",
+    "Invalid expiry dates are rejected; access status includes the coach support contact",
+    "Latest source initializes without JS runtime errors and without a backend connection",
+    "Expiry rules in the browser: 7/3/1-day tiers, wording, zone labels, and end instants identical to Postgres in every tested zone (DST included)",
+    "Expired login shows the expired message with the coach support contact and leaves no session behind",
+    "Paused login shows the paused message",
+    "Archived login shows the archived message",
+    "Without the status lookup (older database), inactive and expired accounts still get a clear message",
+    "Wrong password still shows the normal credentials error, without an access notice",
+    "Banner: none at 8 days; shown at 7, 3, 2, 1 days and on the last day with the exact end (Dubai time) and contacts; dismissed for the session, back at the next sign-in",
+    "Banner days come from the timezone sent by the server: the same date is 1 day away in Honolulu and the last day in Kiritimati",
+    "A client already signed in is signed out with the expired message once the server reports expiry",
+    "Client with no expiry date signs in to the dashboard with no warning banner",
+    "Coach Access dialog shows days left and the exact end in the client’s timezone",
+    "Coach form: country first (default Sri Lanka), zones by city for multi-zone countries, manual override, end sentence, quick lengths and renewal; list colours and next steps per client timezone"
+  ],
+  "limits": [
+    "No live deployment performed",
+    "Hosted Auth, Edge Function and two-client browser acceptance require customer accounts",
+    "Local DOM checks are not visual desktop/mobile testing"
+  ]
+}

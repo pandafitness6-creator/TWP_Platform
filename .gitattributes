@@ -1,0 +1,40 @@
+# Line endings: store LF and check out LF on every platform, whatever
+# core.autocrlf says. scripts/check.mjs and release.json hash the standalone
+# HTML byte-for-byte, so a CRLF checkout fails `npm run check`.
+* text=auto eol=lf
+
+# Hashed or embedded-into-the-build text: always text, always LF.
+*.html  text eol=lf
+*.css   text eol=lf
+*.js    text eol=lf
+*.mjs   text eol=lf
+*.cjs   text eol=lf
+*.ts    text eol=lf
+*.json  text eol=lf
+*.jsonc text eol=lf
+*.md    text eol=lf
+*.txt   text eol=lf
+*.sql   text eol=lf
+*.toml  text eol=lf
+*.sha256 text eol=lf
+.env.example text eol=lf
+
+# Binary: never convert, never text-diff.
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.ico    binary
+*.webp   binary
+*.avif   binary
+*.mp4    binary
+*.webm   binary
+*.woff   binary
+*.woff2  binary
+*.bundle binary
+
+# Extracted media payloads (restructure stage 1) must stay byte-exact,
+# including any SVG, so nothing under src/media is treated as text.
+src/media/** binary
+# …except the manifest, whose order decides the build's media bundles.
+src/media/manifest.json text eol=lf diff merge

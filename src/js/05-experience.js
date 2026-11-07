@@ -1,0 +1,38 @@
+
+/* Presentation preferences only. No account, planning or biological data is changed. */
+(function(){'use strict';
+const KEY='panda.presentation.v1',VALID={language:['en','ar'],imagery:['female','male']};
+let prefs={language:'en',imagery:'male',confirmed:false},saveError=false;
+try{const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved&&typeof saved==='object'){for(const k of ['language','imagery'])if(VALID[k].includes(saved[k]))prefs[k]=saved[k];prefs.confirmed=saved.confirmed===true;}}catch{}
+function save(){saveError=false;try{localStorage.setItem(KEY,JSON.stringify(prefs));}catch{saveError=true;}}
+function imageryFor(path=''){let role='client';try{role=window.PandaServices?.get()?.preferences?.role||'client';}catch{}if(role==='coach'){path=window.PANDA_CAST?.canonical?.[path]||path;let hash=0;for(const c of String(path))hash=(hash*31+c.charCodeAt(0))>>>0;return hash%2?'female':'male';}return prefs.imagery;}
+function source(path){const mapped=window.PANDA_CAST?.paths?.[path];return mapped?.[imageryFor(path)]||path;}
+function asset(path){const x=source(path);return window.PANDA_RESOLVE_ASSET?.(x)||window.PANDA_ASSETS?.[x]||x;}
+function tr(en,ar){return prefs.language==='ar'?ar:en;}
+function coachImagery(){return !document.body.classList.contains('auth-gate')&&window.PandaServices?.get()?.preferences?.role==='coach';}
+function controls(compact=false){return `<div class="experience-controls ${compact?'compact':''}" data-experience-controls><fieldset><legend data-experience-label="language">${tr('Language','اللغة')}</legend><div class="experience-segments"><button type="button" data-experience-language="en" aria-pressed="${prefs.language==='en'}" lang="en" dir="ltr">English</button><button type="button" data-experience-language="ar" aria-pressed="${prefs.language==='ar'}" lang="ar" dir="rtl">العربية</button></div></fieldset><fieldset><legend data-experience-label="imagery">${tr('Athlete imagery','الصور الرياضية')}</legend><div class="experience-segments"><button type="button" data-experience-imagery="female" aria-pressed="${prefs.imagery==='female'}"><span data-experience-label="female">${tr('Female','نساء')}</span><span class="choice-check" aria-hidden="true">✓</span></button><button type="button" data-experience-imagery="male" aria-pressed="${prefs.imagery==='male'}"><span data-experience-label="male">${tr('Male','رجال')}</span><span class="choice-check" aria-hidden="true">✓</span></button></div></fieldset><p class="caption experience-description" data-experience-label="description">${tr('Personalize the photography. Your plans and targets stay the same.','خصص الصور المعروضة. تظل خططك وأهدافك كما هي.')}</p><p class="caption experience-save-error" role="status" ${saveError?'':'hidden'}>${tr('This browser cannot save your preference. It will apply for this visit.','لا يمكن لهذا المتصفح حفظ تفضيلاتك. ستطبق خلال هذه الزيارة.')}</p></div>`;}
+function panel(){return `<section class="panel experience-settings"><div class="panel-head"><h2>Your experience</h2></div>${controls()}<p class="caption section">Exercise catalogue names and coach-authored notes may retain their original language.</p></section>`;}
+function updateImages(){
+ document.querySelectorAll('img[data-media-source]').forEach(img=>{const key=img.dataset.mediaSource,newPath=source(key);if(img.dataset.mediaResolved===newPath)return;img.src=asset(key);img.dataset.mediaResolved=newPath;img.removeAttribute('srcset');if(!document.body.classList.contains('reduced-motion')&&!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)img.animate?.([{opacity:.72},{opacity:1}],{duration:220,easing:'cubic-bezier(.22,1,.36,1)'});const fp=window.PANDA_CAST?.focal?.[newPath];if(fp){img.style.setProperty('--media-x',fp[0]+'%');img.style.setProperty('--media-y',fp[1]+'%');img.style.setProperty('--media-mobile-x',fp[2]+'%');img.style.setProperty('--media-mobile-y',fp[3]+'%');}});
+ const art=document.documentElement.dataset.pageArt;if(art)document.documentElement.style.setProperty('--page-art','url("'+asset(art)+'")');
+ document.documentElement.style.setProperty('--experience-photo','url("'+asset('assets/cast/login.webp')+'")');window.PandaFraming?.schedule();
+}
+function apply(){
+ document.documentElement.lang=prefs.language;document.documentElement.dir=prefs.language==='ar'?'rtl':'ltr';document.documentElement.dataset.imagery=prefs.imagery;
+ document.querySelectorAll('[data-experience-language]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.experienceLanguage===prefs.language)));
+ document.querySelectorAll('[data-experience-imagery]').forEach(b=>{b.disabled=coachImagery();b.setAttribute('aria-pressed',String(!coachImagery()&&b.dataset.experienceImagery===prefs.imagery));});
+ const labels={language:['Language','اللغة'],imagery:['Athlete imagery','الصور الرياضية'],female:['Female','نساء'],male:['Male','رجال'],description:['Personalize the photography. Your plans and targets stay the same.','خصص الصور المعروضة. تظل خططك وأهدافك كما هي.']};
+ if(coachImagery()){labels.imagery=['Mixed athlete imagery','صور رياضية مختلطة'];labels.description=['Coach view shows both athletes. Client views follow their female or male selection.','يعرض المدرب الرياضيين معاً. تتبع صور العميل اختياره للمرأة أو الرجل.'];}
+ document.querySelectorAll('[data-experience-label]').forEach(n=>{const x=labels[n.dataset.experienceLabel];if(x)n.textContent=tr(...x);});
+ document.querySelectorAll('.experience-save-error').forEach(n=>{n.hidden=!saveError;n.textContent=tr('This browser cannot save your preference. It will apply for this visit.','لا يمكن لهذا المتصفح حفظ تفضيلاتك. ستطبق خلال هذه الزيارة.');});
+ updateImages();window.PandaI18n?.apply(document.body);window.PandaLoginVideo?.sync();
+}
+function set(key,value){if(!VALID[key]?.includes(value))return;prefs[key]=value;save();apply();window.dispatchEvent(new CustomEvent('panda:experience',{detail:{...prefs}}));}
+function gate(){
+ if(prefs.confirmed)return false;document.body.classList.add('auth-gate');for(const id of ['sidebar','topbar','mobile-nav'])document.getElementById(id).innerHTML='';
+ const U=window.PandaUI;document.getElementById('main').innerHTML=`<section class="auth-layout experience-welcome"><div class="auth-story">${PandaLoginVideo.markup()}<div class="auth-story-copy"><span class="eyebrow">TRAIN WITH PANDA</span><p>Strength in discipline.<br>Power in purpose.</p></div></div><div class="auth-panel"><div class="brand auth-brand">${PandaBrand.logo('horizontal','panda-logo-full')}</div><div class="auth-content"><p class="eyebrow">YOUR PORTAL. YOUR WAY.</p><h1>Make it<br>your own.</h1><p class="muted">Choose your language and athlete imagery.</p>${controls()}<button type="button" class="btn primary experience-continue" data-experience-continue>Continue to sign in ${U.icon('arrow')}</button><p class="caption">You can change these choices in Settings.</p></div><p class="auth-footer" dir="ltr">TRAIN WITH PANDA</p></div></section>`;U.enhance(document.getElementById('main'));apply();return true;
+}
+document.addEventListener('click',event=>{const b=event.target.closest?.('[data-experience-language],[data-experience-imagery],[data-experience-continue]');if(!b)return;event.preventDefault();if(b.hasAttribute('data-experience-language'))set('language',b.dataset.experienceLanguage);else if(b.hasAttribute('data-experience-imagery'))set('imagery',b.dataset.experienceImagery);else{prefs.confirmed=true;save();window.PandaPortal?.render();apply();document.querySelector('[name="username"]')?.focus();}});
+window.PandaExperience={get:()=>({...prefs}),imageryFor,set,resolve:source,asset,controls,panel,gate,apply,hasExercise:id=>!!window.PANDA_CAST?.exercise_ids?.includes(id)};
+apply();
+})();

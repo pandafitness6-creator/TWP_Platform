@@ -1,0 +1,10 @@
+TRAIN WITH PANDA — Kundenpaket v0.9.16
+
+1. ZIP vollständig entpacken, nicht nur public/index.html.
+2. docs/DEPLOY.md lesen (vollständige Anleitung auf Englisch).
+3. Neues eigenes Supabase-Projekt und Cloudflare-Pages-Projekt verwenden.
+4. Datenbank, Account-Funktion, Coach-Konto und öffentliche Verbindung einrichten.
+5. Neu bauen, prüfen und ausschließlich public/ veröffentlichen.
+
+Es handelt sich um eine Neuinstallation mit vollständigem Schema und Standardinhalten. Bestehende Live-Kunden und private Daten sind nicht enthalten. Die Frontend-Versionshistorie ist aus vorhandenen Ständen rekonstruiert; eine ursprüngliche Git-Historie lag nicht vor.
+

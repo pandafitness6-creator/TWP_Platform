@@ -1,0 +1,2 @@
+[functions.panda-accounts]
+verify_jwt = false

@@ -1,0 +1,3 @@
+
+window.PandaBrand={logo:(kind='horizontal',cls='')=>{const box={horizontal:'95 852 1889 344',stacked:'325 848 1398 379',mark:'95 852 420 344',monogram:'185 712 1678 525'}[kind]||'95 852 1889 344',file=kind==='mark'?'horizontal':kind;return `<svg class="panda-original-logo ${cls}" viewBox="${box}" role="img" aria-label="TRAIN WITH PANDA" data-no-translate xmlns="http://www.w3.org/2000/svg"><image href="${PANDA_RESOLVE_ASSET('assets/brand/'+file+'.png')}" width="2048" height="2048"/></svg>`;}};
+document.querySelector('link[rel=icon]').href='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(PandaBrand.logo('mark'));

@@ -1,0 +1,6 @@
+/* Photo tools must stay visible below the meal preview, also for meals that still show the placeholder. */
+.editor-meal-preview{aspect-ratio:auto;overflow:visible;border-radius:0}
+.editor-meal-preview>img,.editor-meal-preview>.image-unavailable{width:100%;height:auto;aspect-ratio:3/2;border-radius:10px;overflow:hidden;box-sizing:border-box}
+.editor-meal-preview>img{display:block;object-fit:contain;background:var(--surface-2)}
+.editor-meal-preview>.image-unavailable{display:flex;flex-direction:column;justify-content:center;align-items:center}
+.editor-meal-preview>.meal-photo-tools{position:static;margin-top:8px}

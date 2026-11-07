@@ -1,0 +1,5 @@
+# Byte-exact sources inlined by scripts/assemble.mjs; formatting changes the build.
+src/data/
+src/css/
+src/js/
+src/portal.template.html

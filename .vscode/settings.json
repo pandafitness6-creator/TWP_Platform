@@ -1,0 +1,36 @@
+{
+  // The repo is LF-only (.gitattributes); VS Code on Windows otherwise creates
+  // new files with CRLF.
+  "files.eol": "\n",
+  // src/data/panda-*.json hold byte-exact minified JSON that scripts/assemble.mjs
+  // inlines into the build; any reformatting changes the output hashes (see
+  // src/data/README.md). VS Code cannot scope settings to a folder, so these files
+  // are treated as plain text: no JSON formatter applies, and save-time edits are
+  // off. Their lines are far beyond the tokenization limit, so no highlighting is lost.
+  "files.associations": {
+    "**/src/data/panda-*.json": "plaintext"
+  },
+  "[plaintext]": {
+    "editor.formatOnSave": false,
+    "editor.formatOnPaste": false,
+    "editor.formatOnType": false,
+    "files.insertFinalNewline": false,
+    "files.trimFinalNewlines": false,
+    "files.trimTrailingWhitespace": false
+  },
+  // src/css/*.css and src/portal.template.html are also inlined byte-for-byte.
+  // CSS files end with exactly one newline (assemble.mjs checks this), so only
+  // reformatting is a risk there; the only CSS in this repo is under src/css.
+  "[css]": {
+    "editor.formatOnSave": false,
+    "editor.formatOnPaste": false,
+    "editor.formatOnType": false
+  },
+  // Same for src/js/*.js (also one final newline each, no trailing whitespace).
+  // The only browser JS in this repo is under src/js; scripts/ is Node tooling.
+  "[javascript]": {
+    "editor.formatOnSave": false,
+    "editor.formatOnPaste": false,
+    "editor.formatOnType": false
+  }
+}

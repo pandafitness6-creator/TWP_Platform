@@ -1,0 +1,23 @@
+{
+  "note": "Sanitized release snapshots reconstructed from supplied static builds; no original Git repository was present. Hashes identify input HTML without carrying its original account configuration.",
+  "releases": [
+    {
+      "version": "0.9.14",
+      "original_web_html_sha256": "613d92f350cf3e821b742d3f4b326ecc9f2239ffc6889c819b0e9f4141fe1aa1",
+      "reconstructed_source_sha256": "5a71cbe8f26f44e397bb7258bdcd6f480ffb609540cc0b0672942ba500b2f692",
+      "media_payloads": 929
+    },
+    {
+      "version": "0.9.15",
+      "original_web_html_sha256": "af3fc446831627df5958e46f6877c2933f3ff0de448ef6d441f5665ff1aa47cb",
+      "reconstructed_source_sha256": "363b2e59d8de7e5fd8df02f82c6303d7a3db83504ad81d866f9fbbd28d045f44",
+      "media_payloads": 1047
+    },
+    {
+      "version": "0.9.16",
+      "original_web_html_sha256": "e43ba9d4c845b2225f9788d89a01218de78e093326fc5e7dbf1d8ad5e7854369",
+      "reconstructed_source_sha256": "e7aa57c459faa6ac92c06050de859d81ba6a8366e3ef9ada9d098c85fdb907f0",
+      "media_payloads": 1047
+    }
+  ]
+}

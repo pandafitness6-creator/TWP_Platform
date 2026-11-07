@@ -1,0 +1,14 @@
+[
+  {
+    "version": "0.9.14",
+    "commit": "4a862eb5833d9fbe1c5bbd0ff3284616b11b2e6a"
+  },
+  {
+    "version": "0.9.15",
+    "commit": "f6f89b784dab31152568535433b40fd6d6af0604"
+  },
+  {
+    "version": "0.9.16",
+    "commit": "164b9a36341ff20058302d0791082a9d2d44d55a"
+  }
+]

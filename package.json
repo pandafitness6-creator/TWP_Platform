@@ -1,0 +1,27 @@
+{
+  "name": "train-with-panda-portal",
+  "version": "0.9.16",
+  "private": true,
+  "description": "TRAIN WITH PANDA portal and Cloudflare/Supabase deployment package",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "assemble": "node scripts/assemble.mjs",
+    "prebuild": "npm run assemble",
+    "build": "node scripts/build.mjs",
+    "check": "node scripts/check.mjs",
+    "manifest": "node scripts/manifest.mjs",
+    "dev": "wrangler pages dev public",
+    "prepreview": "npm run build && npm run check",
+    "preview": "wrangler pages deploy public --branch=panda-review",
+    "predeploy": "npm run build && npm run check",
+    "deploy": "wrangler pages deploy public",
+    "configure": "node --env-file=.env.local scripts/configure-portal.mjs",
+    "bootstrap:coach": "node --env-file=.env.local scripts/bootstrap-coach.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "4.131.1"
+  }
+}

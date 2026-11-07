@@ -1,0 +1,80 @@
+[
+  {
+    "file": "01-resolve-asset.js"
+  },
+  {
+    "file": "02-config.js"
+  },
+  {
+    "file": "03-media-cast.js"
+  },
+  {
+    "file": "04-login-video.js"
+  },
+  {
+    "file": "05-experience.js"
+  },
+  {
+    "file": "06-brand.js"
+  },
+  {
+    "file": "07-framing.js"
+  },
+  {
+    "file": "08-arabic.js"
+  },
+  {
+    "file": "09-i18n.js"
+  },
+  {
+    "file": "10-plan-data.js"
+  },
+  {
+    "file": "11-studio.js"
+  },
+  {
+    "file": "12-catalogue.js"
+  },
+  {
+    "file": "13-seed-coaching-recipes.js"
+  },
+  {
+    "file": "14-cardio-options.js"
+  },
+  {
+    "file": "15-services.js"
+  },
+  {
+    "file": "16-cloud.js"
+  },
+  {
+    "file": "17-chat-badge.js"
+  },
+  {
+    "file": "18-chat.js"
+  },
+  {
+    "file": "19-guides.js"
+  },
+  {
+    "file": "20-attention.js"
+  },
+  {
+    "file": "21-selects.js"
+  },
+  {
+    "file": "22-ui.js"
+  },
+  {
+    "file": "23-anatomy.js"
+  },
+  {
+    "file": "24-account-ui.js"
+  },
+  {
+    "file": "25-calories.js"
+  },
+  {
+    "file": "26-portal.js"
+  }
+]

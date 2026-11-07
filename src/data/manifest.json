@@ -1,0 +1,78 @@
+[
+  {
+    "global": "PANDA_MEDIA",
+    "file": "panda-media.json"
+  },
+  {
+    "global": "PANDA_CAST",
+    "file": "panda-cast.json"
+  },
+  {
+    "global": "PANDA_LOGIN_VIDEOS",
+    "file": "panda-login-videos.json"
+  },
+  {
+    "global": "PANDA_AR_ARTICLES",
+    "file": "panda-ar-articles.json"
+  },
+  {
+    "global": "PANDA_PLAN_LIBRARY",
+    "file": "panda-plan-library.json"
+  },
+  {
+    "global": "PANDA_CARDIO_TEMPLATES",
+    "file": "panda-cardio-templates.json"
+  },
+  {
+    "global": "PANDA_SUPPLEMENT_PLANS",
+    "file": "panda-supplement-plans.json"
+  },
+  {
+    "global": "PANDA_ARTICLE_IMAGES",
+    "file": "panda-article-images.json"
+  },
+  {
+    "global": "PANDA_CATALOGUE",
+    "file": "panda-catalogue.json"
+  },
+  {
+    "global": "PANDA_LIBRARY_EXTENSION",
+    "file": "panda-library-extension.json"
+  },
+  {
+    "global": "PANDA_CARDIO_EXTENSION",
+    "file": "panda-cardio-extension.json"
+  },
+  {
+    "global": "PANDA_SEED_BASE",
+    "file": "panda-seed-base.json"
+  },
+  {
+    "global": "PANDA_RECIPE_SEED",
+    "file": "panda-recipe-seed.json"
+  },
+  {
+    "global": "PANDA_RECIPE_INGREDIENTS",
+    "file": "panda-recipe-ingredients.json"
+  },
+  {
+    "global": "PANDA_EDUCATION_095",
+    "file": "panda-education-095.json"
+  },
+  {
+    "global": "PANDA_CARDIO_METHODS",
+    "file": "panda-cardio-methods.json"
+  },
+  {
+    "global": "PANDA_CARDIO_INTENSITIES",
+    "file": "panda-cardio-intensities.json"
+  },
+  {
+    "global": "PANDA_CARDIO_DEFAULTS",
+    "file": "panda-cardio-defaults.json"
+  },
+  {
+    "global": "PANDA_TIMEZONES",
+    "file": "panda-timezones.json"
+  }
+]

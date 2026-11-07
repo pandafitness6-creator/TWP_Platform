@@ -1,0 +1,14 @@
+[
+  {
+    "family": "PandaDisplay",
+    "file": "panda-display.woff"
+  },
+  {
+    "family": "PandaSans",
+    "file": "panda-sans.woff"
+  },
+  {
+    "family": "PandaArabic",
+    "file": "panda-arabic.woff"
+  }
+]
