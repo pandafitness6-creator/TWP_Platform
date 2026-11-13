@@ -53,18 +53,18 @@
     },
     {
       "path": "database/FRESH-INSTALL.sql",
-      "bytes": 903583,
-      "sha256": "eff63a588073284676a11c5459c23c81bead506974b96ed2f9a549a95e2df5a5"
+      "bytes": 926931,
+      "sha256": "a43974a24ed48edbfc95d518dd7358a31e6f561905f3121312ade4755699cc8f"
     },
     {
       "path": "database/MIGRATION-ORDER.txt",
-      "bytes": 736,
-      "sha256": "5a840aefb4aec8854c01c1c4b32455fd4b401674955f031577d80843b4190bb2"
+      "bytes": 767,
+      "sha256": "b9f4cb49f19970645d48793ead83dcb7e344bacdf642b1b62d5c6919de4d8716"
     },
     {
       "path": "database/README.md",
-      "bytes": 874,
-      "sha256": "a0bfaa2f50b7070401d9e13614f0972fcb7d5630989ab7004a5fd58643d54ce5"
+      "bytes": 2152,
+      "sha256": "150a1ed92732115d398210d5cc2c87b064f211496647c88ec36d0afa3f3a7383"
     },
     {
       "path": "docs/ACCEPTANCE.md",
@@ -73,8 +73,8 @@
     },
     {
       "path": "docs/DEPLOY.md",
-      "bytes": 9358,
-      "sha256": "ac66c4347c218f5b033ffa8b5f8f9400c90f99aaaa442b127f230e3b17bb3187"
+      "bytes": 10891,
+      "sha256": "fd7ca211f75c60d34b998acff8ffc776a2abcea82698a60df6f433d900675c34"
     },
     {
       "path": "docs/PRIVACY-CHECK.json",
@@ -88,8 +88,8 @@
     },
     {
       "path": "docs/VERIFICATION.json",
-      "bytes": 3496,
-      "sha256": "001e17bde52b6a55995941a827397411d4ef23bda6aaea6f5d02538f04471a67"
+      "bytes": 5611,
+      "sha256": "09dcd5f9ccf5335045f0ba6954141583416eb4e8ac0c355119312bec6e586bb9"
     },
     {
       "path": "history/CHANGELOG.md",
@@ -110,6 +110,11 @@
       "path": "history/SOURCE-PROVENANCE.json",
       "bytes": 1054,
       "sha256": "9eff4aa236eb0e425e571d952b06a13eeeffacbdeb08822d844d97739aecab23"
+    },
+    {
+      "path": "INTAKE-DESIGN.md",
+      "bytes": 32916,
+      "sha256": "b07a71018460e0b75cf43980ba2ea94c0fbeda0eb5281b2345b1aa14027f8be3"
     },
     {
       "path": "package-lock.json",
@@ -5877,9 +5882,19 @@
       "sha256": "1142cde64da8a746589f8483c21de5f6a44b394496f1998393d1161272617280"
     },
     {
+      "path": "supabase/migrations/202611130023_client_intake.sql",
+      "bytes": 23301,
+      "sha256": "d55319af0e6b790cc6b320e071289dd50f2668083644e65b027be35c7d8963ef"
+    },
+    {
       "path": "tests/access-expiry.cjs",
-      "bytes": 37154,
-      "sha256": "a9d8636c522bb16573685ed134d5ab239a25bcafb7fa9260adb0897c176fe2c6"
+      "bytes": 37253,
+      "sha256": "bd509396460f56aaa6afabce89a4eef2f953e1ff00cd38828bcf322cdd57bca9"
+    },
+    {
+      "path": "tests/client-intake.cjs",
+      "bytes": 23230,
+      "sha256": "0dccd0289894b7f6f0d2bd98320fddcaa4345ae2f47e30ecd1d487df5b2566ce"
     },
     {
       "path": "tests/package.json",
@@ -5888,8 +5903,8 @@
     },
     {
       "path": "tests/verify.cjs",
-      "bytes": 5480,
-      "sha256": "44a6025df9721846f383332f3aa3898f8b06903ff493212b6af265c70216fef6"
+      "bytes": 5599,
+      "sha256": "aee0edc00f1c7ffaa40b770480111ae109e9b8aa19391061e9b7182ccd2d7c44"
     },
     {
       "path": "wrangler.jsonc",

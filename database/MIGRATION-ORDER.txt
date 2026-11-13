@@ -20,3 +20,4 @@
 202609290020_training_articles.sql
 202611010021_client_access_expiry.sql
 202611020022_client_timezone.sql
+202611130023_client_intake.sql

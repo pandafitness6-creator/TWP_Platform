@@ -49,7 +49,8 @@ async function sql({PGlite,bootstrap,migrations},pass){
  for(const [,text]of migrations.slice(through20))await db.exec(text);
  assert.deepEqual({...await account(db,ids.legacy)},{expires:null,timezone:null,country_code:null});
  assert.equal(await records(),before);assert.equal(await ready(db,ids.legacy),true);assert.equal(await ready(db,ids.coach),true);
- await db.exec(migrations.at(-1)[1]);assert.equal(await ready(db,ids.legacy),true);assert.equal(await records(),before);
+ // Re-run 022 by name: later migrations follow it in the list.
+ await db.exec(migrations.find(([f])=>f.startsWith('202611020022'))[1]);assert.equal(await ready(db,ids.legacy),true);assert.equal(await records(),before);
  let s=await status(db,ids.legacy);assert.equal(s.state,'ok');assert.equal(s.timezone,'Asia/Colombo');assert.equal(s.timezone_source,'default');
  pass('Migrations 021 and 022 upgrade an existing install: no expiry, no timezone (default Asia/Colombo), records and access unchanged; 022 re-runs safely');
 
