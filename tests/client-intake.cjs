@@ -221,4 +221,4 @@ async function sql({PGlite,bootstrap,migrations},pass){
  pass('Re-running migration 023 on a database with intakes leaves every client record and the coach\'s retention setting unchanged');
  await db.close();
 }
-module.exports={sql};
+module.exports={sql,helpers:{as,one,record,save,definition,plans,profile,coachAccount,install}};

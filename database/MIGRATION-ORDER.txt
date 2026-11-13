@@ -21,3 +21,4 @@
 202611010021_client_access_expiry.sql
 202611020022_client_timezone.sql
 202611130023_client_intake.sql
+202611140024_client_archived_at.sql

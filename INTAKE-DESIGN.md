@@ -1,6 +1,6 @@
 # INTAKE-DESIGN — the `client_intake` record kind
 
-Design only. No project files were changed. This document covers the proposed record shape, migration `023`, the frontend wiring and the risks. Line references point at the current tree (`feature/auto-onboarding`, based on `381bfec`).
+This document covers the record shape, migration `023`, the frontend wiring and the risks. It was first written as a proposal and has been **updated to match what was built** in `supabase/migrations/202611130023_client_intake.sql` and `202611140024_client_archived_at.sql` (§8). The database side is built and tested (`tests/client-intake.cjs`, `tests/client-archive.cjs`). The frontend wiring in §4 is not built yet. Line references point at the tree on `feature/auto-onboarding`.
 
 **Decisions in this document**
 
@@ -12,6 +12,10 @@ Design only. No project files were changed. This document covers the proposed re
 | D4 | Name, gender, age, height, weight and goal stay on `clients` only. Intake writes them there, in the same atomic save. At submission the server copies them into a read-only snapshot. |
 | D5 | Validation, the write window and server-stamped fields live in a new trigger. `panda_save` and `readable()` get four and one small text patches, applied by search-and-replace like migrations 009, 010 and 014. |
 | D6 | When a save batch contains `client_intake`, the database replaces the event label with a fixed string, so no caller can put intake content into `panda_events`. |
+| D7 | `health_flag` is computed by the server on every write from seven answers (§1.2). Nobody can set it. |
+| D8 | Lifts record a type (`1rm`, `working_set` or `unknown`), with reps for a working set (§1.5). |
+| D9 | `consent.health_data` is kept and must be `true` to submit (§1.10). |
+| D10 | Retention is configurable in `settings/brand.intake_retention_months` (default 24 months after archive), and the server records each client's archive date in `clients.archived_at` (§8). No deletion job yet. |
 
 ---
 
@@ -22,7 +26,7 @@ Design only. No project files were changed. This document covers the proposed re
 - **Strict shape.** Every group and every key below must be present in every write, drafts included. Unknown keys are rejected at every level. The frontend always sends the full skeleton.
 - **Two levels of validation.** Types and ranges are always checked. A value may be `null` while `status` is `draft` or `reopened`. Completeness (the "Required" column) is checked only when `status` is `submitted`.
 - **Size cap.** `octet_length(data::text) ≤ 65,536`. The table already allows 1 MB per row; intake needs far less.
-- **Server-managed fields** (marked ⚙). The trigger sets them, and it ignores or overwrites whatever the client sends.
+- **Server-managed fields** (marked ⚙): `submitted_at`, `submitted_profile` and `health_flag`. The trigger removes whatever any caller sends for them (client, coach or a direct write) and sets them itself.
 - **Personal data.** The six existing personal fields are **not** in this record (§5). Only neck and waist are stored here, because they have no other home that every package can write.
 
 ### 1.2 Top level
@@ -31,9 +35,10 @@ Design only. No project files were changed. This document covers the proposed re
 |---|---|---|---|
 | `id` | string | must equal the record id and `owner_id` (the client's uuid) | always |
 | `form_version` | integer | `1`. Increment it when the questions change, and the validator with it | always |
-| `status` | string | `draft` \| `submitted` \| `reopened`. A client may set only `draft` or `submitted`; only the coach may set `reopened` | always |
+| `status` | string | `draft` \| `submitted` \| `reopened`. Only the coach may move an intake to `reopened`. A client sends `draft` or `submitted`; while the intake is `reopened` the client may also send `reopened`, and the server stores a client's `draft` as `reopened` until they submit (§3.1) | always |
 | `submitted_at` ⚙ | string \| null | ISO timestamp stamped by the server when `status` changes to `submitted`; otherwise carried over from the previous version | – |
 | `submitted_profile` ⚙ | object \| null | Snapshot of `clients.name, sex, age, height, weight, goal`, copied by the server when `status` changes to `submitted` | – |
+| `health_flag` ⚙ | boolean | Recomputed on every write, drafts included. `true` when any of `medical.conditions.chest_pain`, `heart_disease`, `stroke`, `coronary_disease`, `light_headedness`, `pregnancy` or `medical.exercise_contraindications.present` is `true`; otherwise `false` (unanswered counts as `false`) | always |
 | `personal` | object | §1.3 | always |
 | `medical` | object | §1.4 | always |
 | `training` | object | §1.5 | always |
@@ -71,12 +76,14 @@ Name, gender, age, height, weight and training goal are written to `clients` (§
 | Field | Type | Rule | Required on submit |
 |---|---|---|---|
 | `experience_years` | number \| null | 0–80, in steps of 0.5 | yes |
-| `lifts` | object | exactly `squat`, `bench_press`, `deadlift` | – |
-| `lifts.<lift>.value` | number \| null | > 0; ≤ 600 if unit is `kg`, ≤ 1300 if `lb`. `null` means "don't know" | no |
-| `lifts.<lift>.unit` | string | `kg` \| `lb` | yes (UI default `kg`) |
-| `lifts.<lift>.estimated` | boolean | must be `false` when `value` is `null` | yes |
+| `lifts` | object | exactly `squat`, `bench_press`, `deadlift`, each with exactly the five keys below | – |
+| `lifts.<lift>.type` | string | `1rm` \| `working_set` \| `unknown`. Always required, drafts included (UI default `unknown`) | always |
+| `lifts.<lift>.value` | number \| null | `unknown`: must be `null`. Otherwise 0.01–600 if unit is `kg`, 0.01–1300 if `lb`, at most 2 decimal places | yes, unless `unknown` |
+| `lifts.<lift>.unit` | string | `kg` \| `lb` | always (UI default `kg`) |
+| `lifts.<lift>.reps` | integer \| null | `working_set`: 1–20 (may be `null` in a draft). `1rm` and `unknown`: must be `null` | yes, for `working_set` |
+| `lifts.<lift>.estimated` | boolean | must be `false` when `type` is `unknown` | always |
 
-Open question: whether `value` means a one-rep max or a recent heavy set. If it is a set, add `reps` (1–20) now rather than in `form_version` 2.
+A draft may hold a working set with no reps yet, so the client can save before filling them in; reps are required on submit.
 
 ### 1.6 `goals`
 
@@ -110,13 +117,13 @@ These are the client's stated availability. They are deliberately **not** `clien
 |---|---|---|---|
 | `notes` | string | ≤4000 | no |
 
-### 1.10 `consent` (recommended addition)
+### 1.10 `consent`
 
 | Field | Type | Rule | Required on submit |
 |---|---|---|---|
-| `health_data` | boolean \| null | the client agrees that the coach may store and use this health information | must be `true` |
+| `health_data` | boolean \| null | the client agrees that the coach may store and use this health information | must be `true` ("Agree to the health information consent before submitting") |
 
-Health data is a special category in most privacy regimes. If the coaching agreement already covers it, drop this group, but decide that before `form_version` 1 ships.
+Health data is a special category in most privacy regimes. Decision: keep this group in `form_version` 1.
 
 ### 1.11 Example (submitted)
 
@@ -125,6 +132,7 @@ Health data is a special category in most privacy regimes. If the coaching agree
   "id": "6f1c…-uuid", "form_version": 1, "status": "submitted",
   "submitted_at": "2026-11-20T08:14:03.512Z",
   "submitted_profile": {"name": "Sam Lee", "sex": "Female", "age": 34, "height": 168, "weight": 71.5, "goal": "Get stronger and run a 10 km"},
+  "health_flag": false,
   "personal": {"neck_cm": 33.5, "waist_cm": 78},
   "medical": {
     "conditions": {"arthritis": false, "back_pain": true, "knee_pain": false, "...": false, "family_coronary_before_55": false},
@@ -135,9 +143,9 @@ Health data is a special category in most privacy regimes. If the coaching agree
     "medications": {"present": false, "details": ""}
   },
   "training": {"experience_years": 2.5, "lifts": {
-    "squat": {"value": 80, "unit": "kg", "estimated": true},
-    "bench_press": {"value": 45, "unit": "kg", "estimated": false},
-    "deadlift": {"value": null, "unit": "kg", "estimated": false}}},
+    "squat": {"type": "1rm", "value": 80, "unit": "kg", "reps": null, "estimated": true},
+    "bench_press": {"type": "working_set", "value": 45, "unit": "kg", "reps": 8, "estimated": false},
+    "deadlift": {"type": "unknown", "value": null, "unit": "kg", "reps": null, "estimated": false}}},
   "goals": {"focus_muscles": ["Glutes", "Back"]},
   "schedule": {"days_per_week": 3, "minutes_per_session": 60},
   "equipment": {"items": {"barbells": {"available": true, "details": ""}, "dumbbells": {"available": true, "details": "up to 30 kg"}, "...": {"available": false, "details": ""}}, "notes": "Commercial gym"},
@@ -260,38 +268,54 @@ Clients already cannot delete it, because it is not in their deletable list.
 New functions. Each is `create or replace` with `set search_path=''`, and `revoke all … from public, anon, authenticated` follows each one:
 
 - `panda_private.intake_shape(o jsonb, keys text[]) returns boolean`. Returns true when `o` is an object with exactly `keys`. Use `CASE` on `jsonb_typeof` first, because SQL `and` does not guarantee short-circuiting.
+- `panda_private.intake_bool(v, required)` and `panda_private.intake_number(v, lo, hi, step, required)`: a boolean, or a number in range that is a multiple of `step`; JSON `null` is accepted when not required. (Built instead of reusing `valid_number`, so steps such as 0.5 years and 0.01 kg are checked in one place.)
 - `panda_private.validate_client_intake(b jsonb, submitting boolean) returns void`. Applies the §1 tables. It reuses `panda_private.valid_text`, plus `panda_private.valid_number` for non-null values (`b->'x'='null'::jsonb or valid_number(b->'x',lo,hi)`). Error messages name the field, never its value.
 - `panda_private.guard_client_intake() returns trigger`, `security definer`:
+
+As built (migration 023, section 5):
 
 ```sql
 create or replace function panda_private.guard_client_intake() returns trigger
 language plpgsql security definer set search_path='' as $$
-declare previous jsonb; profile jsonb; was text; now_status text;
+declare previous jsonb; profile jsonb; was text; next_status text; c jsonb; flag boolean;
 begin
  -- panda_save upserts: BEFORE INSERT fires even when the row exists (see 012), so look it up.
  if tg_op='UPDATE' then previous:=old.data;
  else select r.data into previous from public.panda_records r where r.kind='client_intake' and r.id=new.id; end if;
- was:=previous->>'status'; now_status:=new.data->>'status';
- if new.data->>'id' is distinct from new.id or new.owner_id::text is distinct from new.id then raise exception 'Invalid intake identity'; end if;
+ if jsonb_typeof(new.data) is distinct from 'object' or new.data->>'id' is distinct from new.id or new.owner_id::text is distinct from new.id then raise exception 'Invalid intake identity'; end if;
+ was:=previous->>'status';
+ next_status:=case when jsonb_typeof(new.data->'status')='string' then new.data->>'status' end;
  select r.data into profile from public.panda_records r where r.kind='clients' and r.id=new.id;
- -- Client sessions only (the service role has no auth.uid(), as in sync_client_access).
+ -- Client sessions only. The service role has no auth.uid() (as in sync_client_access).
  if auth.uid() is not null and not panda_private.coach() then
-  if not ((coalesce(was,'draft')='draft' and profile->>'status'='onboarding') or was='reopened') then
-   raise exception 'Your intake has been submitted. Ask your coach to reopen it.' using errcode='42501';
+  -- coalesce: with no intake yet (or no profile) a bare comparison is NULL, and NOT NULL never raises.
+  if not coalesce((coalesce(was,'draft')='draft' and profile->>'status'='onboarding') or was='reopened',false) then
+   raise exception '%',case when was='submitted' then 'Your intake has been submitted. Ask your coach to reopen it.' else 'Your intake is not open. Ask your coach to reopen it.' end using errcode='42501';
   end if;
-  if now_status not in ('draft','submitted') then raise exception 'Invalid intake status' using errcode='42501'; end if;
+  -- A reopened intake stays reopened until the client submits it: saving a draft must not
+  -- close the window for a client who is no longer onboarding.
+  if was='reopened' and next_status in ('draft','reopened') then
+   next_status:='reopened';new.data:=jsonb_set(new.data,'{status}','"reopened"');
+  elsif next_status is null or next_status not in ('draft','submitted') then raise exception 'Invalid intake status' using errcode='42501';
+  end if;
  end if;
- -- Server-managed fields: never trusted from the caller.
- new.data:=new.data-'submitted_at'-'submitted_profile';
- if now_status='submitted' and was is distinct from 'submitted' then
+ -- Server-managed fields: whatever the caller sent is discarded.
+ c:=new.data->'medical'->'conditions';
+ flag:=coalesce(c->'chest_pain'='true'::jsonb,false) or coalesce(c->'heart_disease'='true'::jsonb,false)
+  or coalesce(c->'stroke'='true'::jsonb,false) or coalesce(c->'coronary_disease'='true'::jsonb,false)
+  or coalesce(c->'light_headedness'='true'::jsonb,false) or coalesce(c->'pregnancy'='true'::jsonb,false)
+  or coalesce(new.data->'medical'->'exercise_contraindications'->'present'='true'::jsonb,false);
+ new.data:=new.data-'submitted_at'-'submitted_profile'-'health_flag';
+ if next_status='submitted' and was is distinct from 'submitted' then
   new.data:=new.data||jsonb_build_object('submitted_at',to_jsonb(now()),
    'submitted_profile',jsonb_build_object('name',profile->'name','sex',profile->'sex','age',profile->'age',
-     'height',profile->'height','weight',profile->'weight','goal',profile->'goal'));
+    'height',profile->'height','weight',profile->'weight','goal',profile->'goal'));
  else
   new.data:=new.data||jsonb_build_object('submitted_at',coalesce(previous->'submitted_at','null'::jsonb),
    'submitted_profile',coalesce(previous->'submitted_profile','null'::jsonb));
  end if;
- perform panda_private.validate_client_intake(new.data, now_status='submitted');
+ new.data:=new.data||jsonb_build_object('health_flag',flag);
+ perform panda_private.validate_client_intake(new.data,next_status='submitted');
  return new;
 end $$;
 drop trigger if exists panda_client_intake_guard on public.panda_records;
@@ -300,6 +324,11 @@ for each row when (new.kind='client_intake') execute function panda_private.guar
 ```
 
 Notes on the trigger:
+
+- **The window check must not be NULL.** The first draft of this design used `if not ((coalesce(was,'draft')='draft' and profile->>'status'='onboarding') or was='reopened')`. For an `active` client with no intake yet, that is `not (false or NULL)`, which is NULL, and an `IF` on NULL does not raise. Any active client could have created an intake. The built version wraps the condition in `coalesce(…, false)`, so an unknown answer means "closed". A test covers this case.
+- **Reopened stays reopened.** In the first draft, a client's draft save on a reopened intake stored `draft`. For a client who is no longer `onboarding`, the next save then failed the window check, so they were locked out halfway through. The server now rewrites a client's `draft` (or `reopened`) on a reopened intake to `reopened`; only `submitted` closes it.
+- **Two lock messages.** `was='submitted'`: "Your intake has been submitted. Ask your coach to reopen it." Anything else (no intake on an active client, a paused client): "Your intake is not open. Ask your coach to reopen it." Both use errcode `42501`.
+- **`health_flag`** is computed with jsonb comparisons, so `null` and missing answers count as `false`. It is recomputed on every write, including the coach's, and is valid on drafts.
 
 - **Double firing.** On an upsert of an existing row, the trigger runs twice: on the INSERT pass, and again on the UPDATE pass with `old` set. Both passes see the same previous row and the same `now()`, so the result is identical. `EXCLUDED` carries the INSERT pass's changes.
 - **Snapshot timing.** `submitted_profile` reads `clients` inside the same transaction. The frontend sorts `clients` before `client_intake` in each batch (`16-cloud.js:181`; unknown kinds sort last), so the snapshot includes the profile edits made in the same submission.
@@ -325,14 +354,15 @@ Notes on the trigger:
 
 | Who | When they can write | What they can set |
 |---|---|---|
-| Client | (`clients.status = 'onboarding'` **and** no intake yet or intake is `draft`) **or** intake is `reopened` | `status` ∈ {`draft`, `submitted`}; all client fields; server fields are ignored |
-| Coach | always | anything, including `status: 'reopened'` |
-| Client, any other state | refused with `42501` "Your intake has been submitted. Ask your coach to reopen it." | – |
+| Client | (`clients.status = 'onboarding'` **and** no intake yet or intake is `draft`) **or** intake is `reopened` | `status` ∈ {`draft`, `submitted`}, or `reopened` while it is reopened; a `draft` on a reopened intake is stored as `reopened`. All client fields; server fields are ignored |
+| Coach | always | anything, including `status: 'reopened'`; server fields are ignored for the coach too |
+| Client, intake `submitted` | refused with `42501` "Your intake has been submitted. Ask your coach to reopen it." | – |
+| Client, any other state (for example `active` with no intake) | refused with `42501` "Your intake is not open. Ask your coach to reopen it." | – |
 
 Consequences:
 
 - Saving a draft is allowed during onboarding. Submitting locks the intake for the client, **even if the client is still `onboarding`**, so the coach never reviews a moving target.
-- Clients who are already `active` when this ships (or whom the coach activates before they finish) cannot start an intake on their own. The coach "requests" one by creating or setting the record to `reopened` (an empty skeleton passes draft validation).
+- Clients who are already `active` when this ships (or whom the coach activates before they finish) cannot start an intake on their own. The coach "requests" one by creating or setting the record to `reopened` (an empty skeleton passes draft validation). The client can then save drafts as often as needed; the intake stays `reopened` until they submit.
 - Pausing or archiving a client still blocks everything through `ready()`.
 - The UI should offer **Save draft** per step, not autosave on every keystroke. Each save writes one `panda_events` row (§7).
 
@@ -456,12 +486,30 @@ Controls:
 | 13 | Revision conflicts | A coach reopening while the client is still on the form gives the client the existing 40001 "Someone updated this record" message. | Expected behaviour; no change. |
 | 14 | Existing clients, already `active` | They cannot start an intake until the coach creates or reopens one (§3.1). | Coach action; mention it in the release notes. |
 | 15 | Single-coach model | Every coach account can read every intake. This is the same as `client_private` today. | Accepted; note it if multiple coaches are ever supported. |
+| 16 | Seeding the retention setting | Migration 023 adds `intake_retention_months` to `settings/brand` and raises its revision. A coach page open during the upgrade gets a refresh prompt on its next settings save. | Intended: without the bump, that page could save the brand record without the new key. |
+| 17 | Clients archived before migration 024 | Their real archive date is unknown. | 024 stamps them with the upgrade time, so retention counts from the upgrade: data is kept longer, never deleted early. |
 
 ---
 
-## 8. Open questions
+## 8. Retention
 
-1. Lifts: one-rep max or a recent heavy set? If a set, add `reps` in `form_version` 1.
-2. Keep the `consent.health_data` group (§1.10), or rely on the coaching agreement?
-3. Should certain answers (`chest_pain`, `light_headedness`, `pregnancy`, `heart_disease`, `exercise_contraindications.present`) raise a coach attention item before any plan is published? That would be frontend logic in `20-attention.js`.
-4. Retention: how long medical answers are kept after a client is archived. Today, records are deleted only when the account is deleted.
+**Setting.** `settings/brand.intake_retention_months`: whole months, 1–120, to keep a client's intake after the client is archived. `null` or missing means no automatic deletion. Migration 023 seeds it to `24` (2 years) once, only if the key is absent, so it never overrides the coach's value. A trigger (`panda_intake_retention_guard`) rejects other values with "Intake retention must be a whole number of months from 1 to 120, or empty for no automatic deletion." `panda_private.intake_retention_months()` returns the value for a future job. Clients can read the brand record; the value is not sensitive.
+
+**Archive date (migration 024).** `clients.archived_at` is an ISO timestamp, present only while `status` is `archived`. The trigger `panda_client_archived_at` (`panda_private.stamp_client_archive()`) works the same way as the intake guard:
+
+- It looks up the stored row itself, because of the upsert double-firing (§2.6).
+- It always discards the incoming `archived_at`, whoever sends it: client, coach or a direct write.
+- Changing to `archived`: sets `now()`. Still `archived`: keeps the stored date. Any other status: removes the key. Archiving again records a new date.
+- Clients cannot send the key at all: `panda_save` refuses client edits outside their personal fields. Migration 024's preflight checks that guard is still the exact one it was written against.
+- No function is patched. 024 checks the 009, 010, 014 and 023 markers in `panda_save` and `readable()` before and after, stops with "review migration 024" if 023 is missing, and is safe to re-run.
+
+**Deletion job (not built).** It would delete `client_intake` rows whose client has `archived_at` older than `intake_retention_months`, skipping all when the setting is empty. It must run as the service role and delete directly, because `panda_save` refuses intake deletion (Patch C). Until it exists, intakes are removed only when the client's account is deleted.
+
+---
+
+## 9. Open questions
+
+1. Should a `health_flag` intake raise a coach attention item before any plan is published? The flag is now stored; showing it is frontend logic in `20-attention.js`.
+2. Deletion job: where it runs (scheduled edge function or `pg_cron`) and whether the coach is warned before an intake is deleted.
+
+Resolved: lifts store a type with reps for working sets (§1.5); `consent.health_data` is kept (§1.10); retention is 24 months after archive, configurable (§8).

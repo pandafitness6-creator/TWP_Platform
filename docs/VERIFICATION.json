@@ -1,7 +1,7 @@
 {
   "date": "2026-10-02",
   "checks": [
-    "All 23 migrations install into a fresh PostgreSQL test database",
+    "All 24 migrations install into a fresh PostgreSQL test database",
     "No customer or coach accounts seeded",
     "All three v0.9.16 training articles seeded",
     "RLS enabled; anonymous record reads denied",
@@ -32,6 +32,12 @@
     "Migration 010 still applies after 023: a nutrition-only client records water, but not steps",
     "Intake retention is settings/brand.intake_retention_months (seeded 24): 1–120 whole months or empty for none; invalid values are rejected",
     "Re-running migration 023 on a database with intakes leaves every client record and the coach's retention setting unchanged",
+    "Migration 024 aborts when migration 023 is missing, and leaves the database unchanged",
+    "Migration 024 leaves panda_save and readable() unchanged, stamps clients archived before the upgrade once (no revision bump), and re-runs without changes",
+    "Archiving a client records archived_at; later saves of the archived client keep the original date, even when the row sent omits it",
+    "Un-archiving (to active, paused or onboarding) removes archived_at; archiving again records a new date",
+    "The coach cannot set, change or clear archived_at: a value sent on an active client is dropped, on an archived client it is replaced by the server date",
+    "A client cannot send archived_at or archive themselves, cannot update the row directly, and still saves their own profile; direct database writes cannot set it either",
     "Latest source initializes without JS runtime errors and without a backend connection",
     "Expiry rules in the browser: 7/3/1-day tiers, wording, zone labels, and end instants identical to Postgres in every tested zone (DST included)",
     "Expired login shows the expired message with the coach support contact and leaves no session behind",
