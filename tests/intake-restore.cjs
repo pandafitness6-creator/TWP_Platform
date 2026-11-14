@@ -17,16 +17,17 @@ const draft=uid=>({id:uid,form_version:1,status:'draft',personal:{neck_cm:36,wai
  training:{experience_years:null,lifts:{squat:lift,bench_press:lift,deadlift:lift}},goals:{focus_muscles:[]},schedule:{days_per_week:null,minutes_per_session:null},
  equipment:{items:Object.fromEntries(EQUIPMENT.map(k=>[k,{available:null,details:''}])),notes:''},other:{notes:''},consent:{health_data:null}});
 
-// Supabase stand-in: auth always signs in the coach; REST reads and RPCs run as the coach on PGlite.
-// Calls are serialised because as() switches the role on the one connection.
-function backend(db,saves){
+// Supabase stand-in: auth signs in `user` (the coach by default); REST reads and RPCs run as that
+// account on PGlite, so RLS and panda_save apply. Calls are serialised because as() switches the
+// role on the one connection.
+function backend(db,saves,user=ids.coach){
  let chain=Promise.resolve();const run=task=>{const p=chain.then(task);chain=p.catch(()=>{});return p;};
- const coach=task=>run(()=>as(db,ids.coach,task));
+ const coach=task=>run(()=>as(db,user,task));
  return async(path,body)=>{
   const u=new URL(path,'https://test.supabase.co'),p=u.pathname;
-  if(p==='/auth/v1/token')return [200,{access_token:'h.'+Buffer.from('{"iat":1}').toString('base64')+'.s',refresh_token:'r',expires_in:3600,user:{id:ids.coach}}];
+  if(p==='/auth/v1/token')return [200,{access_token:'h.'+Buffer.from('{"iat":1}').toString('base64')+'.s',refresh_token:'r',expires_in:3600,user:{id:user}}];
   if(p==='/auth/v1/logout')return [204];
-  if(p==='/rest/v1/panda_accounts'&&u.searchParams.has('user_id'))return [200,(await coach(()=>db.query('select * from panda_accounts where user_id=$1',[ids.coach]))).rows];
+  if(p==='/rest/v1/panda_accounts'&&u.searchParams.has('user_id'))return [200,(await coach(()=>db.query('select * from panda_accounts where user_id=$1',[user]))).rows];
   if(p==='/rest/v1/panda_accounts')return [200,(await coach(()=>db.query('select * from panda_accounts order by created_at'))).rows];
   if(p==='/rest/v1/panda_records'){const limit=Number(u.searchParams.get('limit')||500),offset=Number(u.searchParams.get('offset')||0);
    return [200,(await coach(()=>db.query('select kind,id,owner_id,data,revision::int revision from panda_records order by kind,id limit $1 offset $2',[limit,offset]))).rows];}
@@ -105,4 +106,4 @@ async function ui({PGlite,bootstrap,migrations},html,pass){
  pass('validate() accepts a missing or valid client_intake list and rejects other shapes or more than 20,000 rows; PandaRecipes.migrate defaults it to []');
  }finally{t.close();await db.close();}
 }
-module.exports={ui};
+module.exports={ui,backend,draft};

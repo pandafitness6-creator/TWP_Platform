@@ -1,0 +1,39 @@
+/* Client intake questionnaire (25-intake.js). Layout only: colours, type and controls come from
+   the visual system (.checkin-section, .checkin-progress, .tab, .field, .check-label, .notice). */
+.intake { display:grid; gap:var(--space-4); margin-top:var(--space-6); }
+.intake .checkin-progress { margin:0; }
+.intake-steps { margin:0; }
+.intake-steps .tab { gap:var(--space-2); }
+.intake-steps .tab .icon { width:16px; height:16px; color:var(--green); }
+.intake-step-number { display:inline-grid; place-items:center; width:20px; height:20px; border-radius:var(--radius-pill); border:1px solid var(--line); font-size:.75rem; line-height:1; color:var(--muted); }
+.intake-steps .tab.active .intake-step-number { border-color:currentColor; color:inherit; }
+.intake-panel form { display:grid; gap:var(--space-4); }
+.intake-panel .form-actions { margin-top:var(--space-2); }
+.intake-group { display:grid; gap:var(--space-4); }
+.intake-group>.caption { margin:0; }
+.intake-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--space-4); }
+.intake-choices { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:var(--space-3); }
+.intake-choices .check-label,.intake-yesno .check-label,.intake-group>.check-label { padding:var(--space-3); background:var(--surface-2); border:1px solid var(--line); border-radius:var(--radius-small); }
+.intake-choices .check-label:has(input:checked),.intake-yesno .check-label:has(input:checked) { border-color:#648a60; background:#213424; color:#d0fac5; }
+.check-label:has(input:disabled) { opacity:.55; }
+.intake-yesno { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--space-3); max-width:420px; }
+.intake-question { border:0; padding:0; margin:0; min-width:0; display:grid; gap:var(--space-2); }
+.intake-question>legend { padding:0; margin-bottom:var(--space-2); font-size:.875rem; color:#c9d3d2; }
+.intake-lift { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,.7fr) minmax(0,.7fr); gap:var(--space-4); align-items:end; }
+.intake-lift>.check-label { grid-column:1/-1; }
+.intake-equipment { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--space-3); }
+.intake-equipment-item { display:grid; gap:var(--space-3); padding:var(--space-4); border:1px solid var(--line); border-radius:var(--radius-small); background:var(--surface-1); min-width:0; }
+.intake-outstanding ul { margin:var(--space-2) 0; padding-inline-start:1.25em; display:grid; gap:var(--space-1); }
+.intake-outstanding p { margin:0; }
+.intake-summaries { display:grid; gap:var(--space-4); }
+.intake-locked { margin-top:var(--space-6); }
+@media (max-width:768px) {
+ .intake-grid,.intake-equipment { grid-template-columns:minmax(0,1fr); }
+ .intake-lift { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ .intake-yesno { max-width:none; }
+ .intake-panel .form-actions .btn { flex:1 1 auto; }
+}
+@media (max-width:480px) {
+ .intake-lift { grid-template-columns:minmax(0,1fr); }
+ .intake-choices { grid-template-columns:minmax(0,1fr); }
+}

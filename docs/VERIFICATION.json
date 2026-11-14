@@ -55,7 +55,16 @@
     "Restoring a backup without client_intake keeps every intake (no deletion sent, database unchanged) and still applies the backup's other changes",
     "A backup with an empty client_intake list is refused as a whole (intakes cannot be deleted) and changes nothing",
     "Commit sends clients before client_intake in one batch (flatten emits the intake)",
-    "validate() accepts a missing or valid client_intake list and rejects other shapes or more than 20,000 rows; PandaRecipes.migrate defaults it to []"
+    "validate() accepts a missing or valid client_intake list and rejects other shapes or more than 20,000 rows; PandaRecipes.migrate defaults it to []",
+    "An onboarding client with no intake lands on the intake (step 1 of 6) after signing in, with the profile fields pre-filled",
+    "Save draft on a step sends one atomic batch (clients, then client_intake) with the fixed event label; continuing without changes saves nothing",
+    "Save and continue on step 2 saves only the intake and opens step 3; unticked conditions are saved as \"no\" once the list is confirmed",
+    "Returning to the intake resumes at the first unfinished step (step 3), with steps 1 and 2 marked complete",
+    "Invalid answers are refused in the browser with a message that names the question (not the value); valid lifts save in the agreed shape",
+    "Steps 4–6 can be skipped and finished later; Submit is blocked in the browser, with nothing sent, until consent (and the rest of what the database requires) is answered",
+    "Submitting stores the intake as submitted (server-stamped snapshot); the page becomes read-only and explains that the coach can reopen it; Home no longer redirects",
+    "The profile fields and the intake save atomically: when the database refuses the intake, the profile change in the same batch is not saved either",
+    "A client who must still change their password sees the password form, not the intake (no records are loaded)"
   ],
   "limits": [
     "No live deployment performed",

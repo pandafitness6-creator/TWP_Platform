@@ -44,4 +44,5 @@ The "Lines" column gives the line numbers of the v0.9.16 standalone.
 | 23-anatomy.js | 6293–6358 | `PandaAnatomy` |
 | 24-account-ui.js | 6359–6416 | `PandaAccountUI`, plus a dictionary extension |
 | 25-calories.js | 6417–6440 | `PandaCalories` |
+| 25-intake.js | – (new) | `PandaIntake`: the client intake questionnaire (six-step form, read-only view, when it shows), plus its dictionary extension. Styles in `src/css/10-intake.css` |
 | 26-portal.js | 6441–7064 | `PandaPortal`: the app, routes and rendering; **starts the app** |

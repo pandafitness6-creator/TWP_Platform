@@ -34,5 +34,9 @@
   {
     "file": "09-chat-layout.css",
     "id": "panda-chat-0915"
+  },
+  {
+    "file": "10-intake.css",
+    "id": "panda-intake"
   }
 ]
