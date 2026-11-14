@@ -118,6 +118,7 @@ window.PandaRecipes=(()=>{
  function migrate(s,seedAssignments=false){window.PandaStudio?.migrate(s);if(!window.PandaServices?.online){window.PandaEducationUpgrade?.(s);window.PandaCoaching?.migrate(s);}
   if(!Object.hasOwn(s,'recipes'))s.recipes=clone(window.PANDA_RECIPE_SEED);
   if(!Object.hasOwn(s,'recipe_images'))s.recipe_images={};
+  if(!Object.hasOwn(s,'client_intake'))s.client_intake=[];
   if(!Object.hasOwn(s,'recipe_assignments')){
    s.recipe_assignments=[];
    if(seedAssignments){const demo={client_alex:[1,9,13,31],client_maya:[4,21,22],client_sara:[6,23,32]};for(const [cid,ids]of Object.entries(demo))if(s.clients.some(c=>c.id===cid))for(const id of ids){const r=s.recipes.find(r=>r.id==='recipe_'+String(id).padStart(2,'0'));s.recipe_assignments.push({id:'ra_'+cid+'_'+id,client_id:cid,recipe_id:r.id,recipe_version:r.version,recipe:clone(r),servings:1,time:'As planned',note:'Example recipe selection for this demo profile.',assigned_at:'2026-09-13'});}}

@@ -88,8 +88,8 @@
     },
     {
       "path": "docs/VERIFICATION.json",
-      "bytes": 6446,
-      "sha256": "d6f9647c2b123faeb52bffaad0bd998343ddbe58bcef8c000e47d6c43d9276d8"
+      "bytes": 7056,
+      "sha256": "da112f95e890a631969cc16d7cac60e337d9ab364fd972339b67a7850de931af"
     },
     {
       "path": "history/CHANGELOG.md",
@@ -433,8 +433,8 @@
     },
     {
       "path": "src/js/13-seed-coaching-recipes.js",
-      "bytes": 158308,
-      "sha256": "7563393c8f2bff1500c2b0927a196f97cf63c863f17060c245232fae0bae546b"
+      "bytes": 158367,
+      "sha256": "f3b031436d39bc4887809110de6297a87af2aa0d89490654b475cdc30c99b0e9"
     },
     {
       "path": "src/js/14-cardio-options.js",
@@ -443,13 +443,13 @@
     },
     {
       "path": "src/js/15-services.js",
-      "bytes": 23176,
-      "sha256": "f0109b90ea9d2ec09cc73fe3f8721a2746cc5d5d74db2709e3210aebd5ee12ae"
+      "bytes": 23475,
+      "sha256": "5be40261f2e06891aa941ed99a674ac915134dba3b74a3f85d7dda0ae35bc0b0"
     },
     {
       "path": "src/js/16-cloud.js",
-      "bytes": 27071,
-      "sha256": "e65d645ef4fa7a1b6e3229eb9320a9b2ee6404416e43c1a136ab6a2462d6bb81"
+      "bytes": 27783,
+      "sha256": "b65db7e70edff6a43b587ffcc40fb881ca0b9df413aa8f8e9bb1ce87f4a02bb6"
     },
     {
       "path": "src/js/17-chat-badge.js",
@@ -5893,8 +5893,8 @@
     },
     {
       "path": "tests/access-expiry.cjs",
-      "bytes": 37253,
-      "sha256": "bd509396460f56aaa6afabce89a4eef2f953e1ff00cd38828bcf322cdd57bca9"
+      "bytes": 37281,
+      "sha256": "c0de189e7581453fb122a52e981bb4169ec84acf28f9f336439851dfac410ffc"
     },
     {
       "path": "tests/client-archive.cjs",
@@ -5907,14 +5907,19 @@
       "sha256": "bde9218315bffc2973cfb3d383ba48f1023acae17bf92044f4b476fa3f219e5a"
     },
     {
+      "path": "tests/intake-restore.cjs",
+      "bytes": 9051,
+      "sha256": "209f3ee539f65a8297439d107c8c96c6782c9e98da76b52855f2ce1ab8db18a1"
+    },
+    {
       "path": "tests/package.json",
       "bytes": 161,
       "sha256": "8f530175f97f2531de2d79af96f02f241899a14c520e73038c9de7ffc98dbac1"
     },
     {
       "path": "tests/verify.cjs",
-      "bytes": 5702,
-      "sha256": "2d4a8089d12b5874d79b01d39dd8970b81fb57c3c5fb571c45d07b3e2d7ab686"
+      "bytes": 5821,
+      "sha256": "78e91e72f3a9d959a10dc25a7505acbd446f925879c674fb63bfed964d6b035e"
     },
     {
       "path": "wrangler.jsonc",

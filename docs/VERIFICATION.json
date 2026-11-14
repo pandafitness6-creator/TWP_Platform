@@ -50,7 +50,12 @@
     "A client already signed in is signed out with the expired message once the server reports expiry",
     "Client with no expiry date signs in to the dashboard with no warning banner",
     "Coach Access dialog shows days left and the exact end in the client’s timezone",
-    "Coach form: country first (default Sri Lanka), zones by city for multi-zone countries, manual override, end sentence, quick lengths and renewal; list colours and next steps per client timezone"
+    "Coach form: country first (default Sri Lanka), zones by city for multi-zone countries, manual override, end sentence, quick lengths and renewal; list colours and next steps per client timezone",
+    "Coach portal loads client_intake records into state (assemble) with the server-set fields",
+    "Restoring a backup without client_intake keeps every intake (no deletion sent, database unchanged) and still applies the backup's other changes",
+    "A backup with an empty client_intake list is refused as a whole (intakes cannot be deleted) and changes nothing",
+    "Commit sends clients before client_intake in one batch (flatten emits the intake)",
+    "validate() accepts a missing or valid client_intake list and rejects other shapes or more than 20,000 rows; PandaRecipes.migrate defaults it to []"
   ],
   "limits": [
     "No live deployment performed",

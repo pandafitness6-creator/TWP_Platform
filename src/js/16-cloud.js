@@ -9,7 +9,7 @@ const configKey='panda:connection:v1', sessionKey='panda:session:v1';
 let config={...window.PANDA_CONFIG}, session=null, account=null, accountRows=[], revisions=new Map(), busy=false, refreshPromise=null;
 let mode=config.mode==='demo'?'demo':'online', connected=false, status='signed-out';
 let access=null, blocked=null, accessTimer=null, endTimer=null, accessCheck=null, dismissed='';
-const arrays=['clients','packages','foods','programs','nutrition_plans','checkins','measurements','activity','photos','articles','invoices','recipes','recipe_assignments','supplement_templates','supplement_references'];
+const arrays=['clients','packages','foods','programs','nutrition_plans','checkins','measurements','activity','photos','articles','invoices','recipes','recipe_assignments','supplement_templates','supplement_references','client_intake'];
 const settings=['brand','strategy','roadmap','swaps','measurement_defs','exercise_edits'];
 const clone=structuredClone, equal=(a,b)=>JSON.stringify(a)===JSON.stringify(b), key=(k,id)=>k+'/'+id;
 try {const saved=JSON.parse(localStorage.getItem(configKey)||'null');if(saved&&!config.supabaseUrl)config={...config,...saved};}catch{}
@@ -150,7 +150,7 @@ function assemble(records,events=[]){
 }
 function flatten(s){
  const out=new Map(),put=(kind,id,data)=>out.set(key(kind,id),{kind,id,data:clone(data)});
- for(const type of arrays)for(const row of s[type]){
+ for(const type of arrays)for(const row of s[type]||[]){
   if(row._restricted)continue;const data=clone(row);
   if(type==='clients'){
    if(account.role==='coach')put('client_private',row.id,{id:row.id,coach_notes:data.coach_notes||''});delete data.coach_notes;
@@ -178,7 +178,9 @@ async function commit(before,after,label){
  for(const [id,rec]of a)if(!b.has(id))changes.push({...rec,data:null,revision:revisions.get(id)||0});
  if(before.preferences.reduced_motion!==after.preferences.reduced_motion)try{localStorage.setItem('panda:reduced-motion',String(after.preferences.reduced_motion));}catch{}
  if(!changes.length)return;
- const order=['foods','packages','programs','nutrition_plans','articles','settings','plan_history','clients'];changes.sort((x,y)=>(order.includes(x.kind)?order.indexOf(x.kind):99)-(order.includes(y.kind)?order.indexOf(y.kind):99));
+ // client_intake after clients: at submission the intake trigger copies the profile into submitted_profile,
+ // so a batch that edits both must save the profile first.
+ const order=['foods','packages','programs','nutrition_plans','articles','settings','plan_history','clients','client_intake'];changes.sort((x,y)=>(order.includes(x.kind)?order.indexOf(x.kind):99)-(order.includes(y.kind)?order.indexOf(y.kind):99));
  busy=true;signal('saving');
  try{
   const result=await api('/rest/v1/rpc/panda_save',{method:'POST',body:{changes,label:label.slice(0,160)}});
@@ -186,7 +188,13 @@ async function commit(before,after,label){
   signal('saved');
  }catch(err){signal('error');if(err.code==='42501')checkAccess();if(err.code==='40001')throw Error('Someone updated this record. Keep this form open, copy any unsaved text, then refresh the portal and retry.');throw err;}finally{busy=false;}
 }
-async function restore(before,after){if(account.role!=='coach')throw Error('Ask your coach to restore a backup.');if(!equal(before.clients.map(x=>x.id).sort(),after.clients.map(x=>x.id).sort()))throw Error('This backup must contain the same customer accounts. Restore data only; accounts are managed separately.');await commit(before,after,'Restored portal data');}
+// hasIntake: whether the backup file itself had a client_intake key (PandaServices.restore
+// passes it, because PandaRecipes.migrate adds an empty one before this runs).
+async function restore(before,after,hasIntake=Object.hasOwn(after,'client_intake')){if(account.role!=='coach')throw Error('Ask your coach to restore a backup.');if(!equal(before.clients.map(x=>x.id).sort(),after.clients.map(x=>x.id).sort()))throw Error('This backup must contain the same customer accounts. Restore data only; accounts are managed separately.');
+ // A backup made before the intake questionnaire has no intakes. Keep the current ones: the database
+ // refuses to delete intakes, so diffing them away would fail the whole restore.
+ if(!hasIntake){after=clone(after);after.client_intake=clone(before.client_intake||[]);}
+ await commit(before,after,'Restored portal data');return after;}
 async function accountCommand(action,body){return api('/functions/v1/panda-accounts',{method:'POST',body:{action,...body}});}
 async function signIn(login,password){
  if(!configured())throw Error('The portal has not been connected yet.');publicConfig(config);blocked=null;resetWarning();

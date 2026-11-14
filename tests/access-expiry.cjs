@@ -329,4 +329,4 @@ async function ui(html,pass,reference){
   assert.deepEqual(t.errors,[]);t.close();}
  pass('Coach form: country first (default Sri Lanka), zones by city for multi-zone countries, manual override, end sentence, quick lengths and renewal; list colours and next steps per client timezone');
 }
-module.exports={sql,ui};
+module.exports={sql,ui,browser:{portal,until,tick}};
