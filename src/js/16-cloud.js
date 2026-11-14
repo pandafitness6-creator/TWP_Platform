@@ -188,12 +188,10 @@ async function commit(before,after,label){
   signal('saved');
  }catch(err){signal('error');if(err.code==='42501')checkAccess();if(err.code==='40001')throw Error('Someone updated this record. Keep this form open, copy any unsaved text, then refresh the portal and retry.');throw err;}finally{busy=false;}
 }
-// hasIntake: whether the backup file itself had a client_intake key (PandaServices.restore
-// passes it, because PandaRecipes.migrate adds an empty one before this runs).
-async function restore(before,after,hasIntake=Object.hasOwn(after,'client_intake')){if(account.role!=='coach')throw Error('Ask your coach to restore a backup.');if(!equal(before.clients.map(x=>x.id).sort(),after.clients.map(x=>x.id).sort()))throw Error('This backup must contain the same customer accounts. Restore data only; accounts are managed separately.');
- // A backup made before the intake questionnaire has no intakes. Keep the current ones: the database
- // refuses to delete intakes, so diffing them away would fail the whole restore.
- if(!hasIntake){after=clone(after);after.client_intake=clone(before.client_intake||[]);}
+async function restore(before,after){if(account.role!=='coach')throw Error('Ask your coach to restore a backup.');if(!equal(before.clients.map(x=>x.id).sort(),after.clients.map(x=>x.id).sort()))throw Error('This backup must contain the same customer accounts. Restore data only; accounts are managed separately.');
+ // Intakes are never restored: they belong to the clients. The database refuses to delete them and
+ // (migration 025) refuses any coach change but a reopen, so restoring them would fail the whole restore.
+ after=clone(after);after.client_intake=clone(before.client_intake||[]);
  await commit(before,after,'Restored portal data');return after;}
 async function accountCommand(action,body){return api('/functions/v1/panda-accounts',{method:'POST',body:{action,...body}});}
 async function signIn(login,password){

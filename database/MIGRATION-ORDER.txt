@@ -22,3 +22,4 @@
 202611020022_client_timezone.sql
 202611130023_client_intake.sql
 202611140024_client_archived_at.sql
+202611150025_coach_intake_status_only.sql

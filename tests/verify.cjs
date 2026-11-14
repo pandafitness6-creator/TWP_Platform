@@ -4,16 +4,18 @@ const {JSDOM,VirtualConsole}=require('jsdom');
 const access=require('./access-expiry.cjs');
 const intake=require('./client-intake.cjs');
 const archive=require('./client-archive.cjs');
+const coachGuard=require('./coach-intake-guard.cjs');
 const intakeRestore=require('./intake-restore.cjs');
 const intakeForm=require('./intake-form.cjs');
+const intakeCoach=require('./intake-coach.cjs');
 const root=process.argv[2]||path.resolve(__dirname,'..');
 const checks=[];function pass(label){checks.push(label);console.log('PASS',label)}
 (async()=>{
  const bootstrap=`create role anon;create role authenticated;create role service_role;create schema auth;create table auth.users(id uuid primary key);create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;create function auth.jwt() returns jsonb language sql stable as $$select jsonb_build_object('iat',9999999999)$$;grant usage on schema auth to authenticated;grant execute on all functions in schema auth to authenticated;`;
  const db=new PGlite();await db.exec(bootstrap);
- const files=fs.readdirSync(path.join(root,'supabase/migrations')).filter(f=>f.endsWith('.sql')).sort();assert.equal(files.length,24);
+ const files=fs.readdirSync(path.join(root,'supabase/migrations')).filter(f=>f.endsWith('.sql')).sort();assert.equal(files.length,25);
  for(const f of files)await db.exec(fs.readFileSync(path.join(root,'supabase/migrations',f),'utf8'));
- pass('All 24 migrations install into a fresh PostgreSQL test database');
+ pass('All 25 migrations install into a fresh PostgreSQL test database');
  assert.equal((await db.query('select count(*)::int n from panda_accounts')).rows[0].n,0);assert.equal((await db.query('select count(*)::int n from auth.users')).rows[0].n,0);pass('No customer or coach accounts seeded');
  const articles=(await db.query("select id,data from panda_records where kind='articles'")).rows;assert(articles.some(x=>/tempo/i.test(x.data.title)));assert(articles.some(x=>/how much weight/i.test(x.data.title)));assert(articles.some(x=>/how hard/i.test(x.data.title)));pass('All three v0.9.16 training articles seeded');
  assert((await db.query("select relrowsecurity from pg_class where relname='panda_records'")).rows[0].relrowsecurity);await db.exec('set role anon');await assert.rejects(()=>db.query('select * from panda_records'));await db.exec('reset role');pass('RLS enabled; anonymous record reads denied');
@@ -22,6 +24,7 @@ const checks=[];function pass(label){checks.push(label);console.log('PASS',label
  const reference=await access.sql({PGlite,bootstrap,migrations},pass);
  await intake.sql({PGlite,bootstrap,migrations},pass);
  await archive.sql({PGlite,bootstrap,migrations},pass);
+ await coachGuard.sql({PGlite,bootstrap,migrations},pass);
  // Test what src/ assembles to now, not a missing or stale generated standalone.
  const assembled=path.join(os.tmpdir(),`panda-verify-${process.pid}.html`);
  execFileSync(process.execPath,[path.join(root,'scripts/assemble.mjs'),'--out',assembled],{stdio:'inherit'});
@@ -32,6 +35,7 @@ const checks=[];function pass(label){checks.push(label);console.log('PASS',label
  await access.ui(html,pass,reference);
  await intakeRestore.ui({PGlite,bootstrap,migrations},html,pass);
  await intakeForm.ui({PGlite,bootstrap,migrations},html,pass);
+ await intakeCoach.ui({PGlite,bootstrap,migrations},html,pass);
  const report={date:'2026-10-02',checks,limits:['No live deployment performed','Hosted Auth, Edge Function and two-client browser acceptance require customer accounts','Local DOM checks are not visual desktop/mobile testing']};
  fs.mkdirSync(path.join(root,'docs'),{recursive:true});fs.writeFileSync(path.join(root,'docs/VERIFICATION.json'),JSON.stringify(report,null,2)+'\n');
 })().catch(e=>{console.error(e.message);process.exitCode=1});

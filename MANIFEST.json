@@ -53,18 +53,18 @@
     },
     {
       "path": "database/FRESH-INSTALL.sql",
-      "bytes": 933725,
-      "sha256": "9d0d0f4319174ab5c6ce50d9270d2a4e1ddb47c199b299dd1fd472111181a87e"
+      "bytes": 945108,
+      "sha256": "09860e47f1558d2617aac77b0bbc0df9c134c0a250f4405e60d98e5ff002a663"
     },
     {
       "path": "database/MIGRATION-ORDER.txt",
-      "bytes": 803,
-      "sha256": "24fb475a0e389f08e25eaf2a34c5993dd6df0de22c206b088bcb5c99bd3e9827"
+      "bytes": 845,
+      "sha256": "babec853a42e1b28c529f168e21becfb3fec44e6c223e0749e5436862760858a"
     },
     {
       "path": "database/README.md",
-      "bytes": 2853,
-      "sha256": "1fe862106e6a1817231b9a3ab5a76cf0c4f2b33d2ec8e785ac9c0e8d21baa1ec"
+      "bytes": 3633,
+      "sha256": "494e0c04900715e714a33734ed9f684117d90c4045a2b5574c8e425f949c8604"
     },
     {
       "path": "docs/ACCEPTANCE.md",
@@ -73,8 +73,8 @@
     },
     {
       "path": "docs/DEPLOY.md",
-      "bytes": 11630,
-      "sha256": "3859ed5f5d710dab41ac3926fab66630499b39908cdff30c65acc1f1ac3aaf97"
+      "bytes": 12356,
+      "sha256": "f50f15e2223e72317782641b33fcf4315b9d380144c96290c6496da26739f795"
     },
     {
       "path": "docs/PRIVACY-CHECK.json",
@@ -88,8 +88,8 @@
     },
     {
       "path": "docs/VERIFICATION.json",
-      "bytes": 7056,
-      "sha256": "da112f95e890a631969cc16d7cac60e337d9ab364fd972339b67a7850de931af"
+      "bytes": 10669,
+      "sha256": "8f5c981b00fc4f58bce23cfe67d082a306d149397023190df7f734017c0c472b"
     },
     {
       "path": "history/CHANGELOG.md",
@@ -113,8 +113,8 @@
     },
     {
       "path": "INTAKE-DESIGN.md",
-      "bytes": 40347,
-      "sha256": "dcad2ce1c49ec908422fcfecad23b0d1951a6f47a9f496076b5f8ce8b2e9c808"
+      "bytes": 41584,
+      "sha256": "665fadd82849ca3bb9b8a7ee5991f12ae7c0aecbde591d4c135800e3aa56350e"
     },
     {
       "path": "package-lock.json",
@@ -242,9 +242,14 @@
       "sha256": "c4fe42936ed2ba08534d940a4631a7e137d5f10b4dbf8a53c76ef4379d9bb845"
     },
     {
+      "path": "src/css/10-intake.css",
+      "bytes": 3786,
+      "sha256": "8b5ffa885ed42c4e3adacb37a476a0089de0355feb572f6f086d9effffb7a777"
+    },
+    {
       "path": "src/css/manifest.json",
-      "bytes": 666,
-      "sha256": "567b9d1e10b7f5acafe821f158117e6d76d88fe8e904e8da54f6c7b38562d4ab"
+      "bytes": 729,
+      "sha256": "ce6bd4f6e9fb05ea2107082e3e819429ad5f4bcc841eb795c560058fbe3d4060"
     },
     {
       "path": "src/data/manifest.json",
@@ -443,13 +448,13 @@
     },
     {
       "path": "src/js/15-services.js",
-      "bytes": 23475,
-      "sha256": "5be40261f2e06891aa941ed99a674ac915134dba3b74a3f85d7dda0ae35bc0b0"
+      "bytes": 23390,
+      "sha256": "3f04829ed034ed825ead95f490cc04536be0137cf6cbcfa0c512794b59678038"
     },
     {
       "path": "src/js/16-cloud.js",
-      "bytes": 27783,
-      "sha256": "b65db7e70edff6a43b587ffcc40fb881ca0b9df413aa8f8e9bb1ce87f4a02bb6"
+      "bytes": 27571,
+      "sha256": "4e28f37a38b98e619f1e6240ca0b4dfaa35aea52034e2e22ae4af7f51e11871d"
     },
     {
       "path": "src/js/17-chat-badge.js",
@@ -468,8 +473,8 @@
     },
     {
       "path": "src/js/20-attention.js",
-      "bytes": 5040,
-      "sha256": "057c912ca5494c22bfb2cba1079e11f31eed7b1d303470385ccc44e39586485e"
+      "bytes": 5535,
+      "sha256": "d96ea0f2cf0ddb71aa6c145d70a4bd621f56b0f7d9d2d27b6bb4bfcf16841740"
     },
     {
       "path": "src/js/21-selects.js",
@@ -497,19 +502,24 @@
       "sha256": "e39a9c65fb1a161e6f77f2caf239cca421c755315536669b9e244d645d7926eb"
     },
     {
+      "path": "src/js/25-intake.js",
+      "bytes": 46909,
+      "sha256": "6863fa89187fa1dfcd0bf2a680e29d588b97f88842371567a5f04c4b7ad67184"
+    },
+    {
       "path": "src/js/26-portal.js",
-      "bytes": 336655,
-      "sha256": "0480680c7ff7f7561e44709e65e36dfcd4003b77f140e92d3600d902de0e95e4"
+      "bytes": 344868,
+      "sha256": "2268653d54d18451e3b96f5148988a2c4750540a7c199ef493cfa28bb4c62584"
     },
     {
       "path": "src/js/manifest.json",
-      "bytes": 996,
-      "sha256": "695b72e943fbca6822269ab84af93e5aa056fff9b6858f23903f940b340a4241"
+      "bytes": 1032,
+      "sha256": "eebdf31d07dc454f7f1c7e3f1db6e093960065743bf8c4b9701cf828573ec7ba"
     },
     {
       "path": "src/js/README.md",
-      "bytes": 4200,
-      "sha256": "d2ed4d0bf77c8c91ba4ff0d5b505fa761615222f9a56829a4a40734c3ca183d5"
+      "bytes": 4462,
+      "sha256": "37c7d6f84527ebbc6b1d8d64c914406a5d09c76dd4d4188e4be3cc3f9c378771"
     },
     {
       "path": "src/media/manifest.json",
@@ -5753,8 +5763,8 @@
     },
     {
       "path": "src/portal.template.html",
-      "bytes": 7766,
-      "sha256": "d33330810e429b7eae3c1cf13f563efcb1ff1e545df9d244a31ddf29605e504b"
+      "bytes": 7860,
+      "sha256": "e4d48fce8abf87a9a6987f59629e9c1d4e63d501fa34bbb5e629c2911996d52c"
     },
     {
       "path": "START-HIER.txt",
@@ -5892,6 +5902,11 @@
       "sha256": "8d18ac457caf04e80b776de7a69d117cb3b0f04aafab200b5cfa4891d8096f3f"
     },
     {
+      "path": "supabase/migrations/202611150025_coach_intake_status_only.sql",
+      "bytes": 11325,
+      "sha256": "eee1caa968df26ca05db7113b33682b5a7fd9938cd12a8f8ff788b02dd0287ef"
+    },
+    {
       "path": "tests/access-expiry.cjs",
       "bytes": 37281,
       "sha256": "c0de189e7581453fb122a52e981bb4169ec84acf28f9f336439851dfac410ffc"
@@ -5903,13 +5918,28 @@
     },
     {
       "path": "tests/client-intake.cjs",
-      "bytes": 23305,
-      "sha256": "bde9218315bffc2973cfb3d383ba48f1023acae17bf92044f4b476fa3f219e5a"
+      "bytes": 23832,
+      "sha256": "3a137f96856480b1e0fe834db6019d5bb3bd5fc545b038bd8fdfea38217a7b2d"
+    },
+    {
+      "path": "tests/coach-intake-guard.cjs",
+      "bytes": 10842,
+      "sha256": "99b9c65e9f254d78d7e20b354e2c047449dc0d87a7be7e19bb8d8ba04653086a"
+    },
+    {
+      "path": "tests/intake-coach.cjs",
+      "bytes": 15387,
+      "sha256": "76f7a3268fdc9f7a134c87bc04298da3c16a77ad263c877ea636b569d11cad41"
+    },
+    {
+      "path": "tests/intake-form.cjs",
+      "bytes": 12730,
+      "sha256": "272a680261c7bbe7bfd759d65428ab7176a8a2cd53906b1e5bce0f5713c7476c"
     },
     {
       "path": "tests/intake-restore.cjs",
-      "bytes": 9051,
-      "sha256": "209f3ee539f65a8297439d107c8c96c6782c9e98da76b52855f2ce1ab8db18a1"
+      "bytes": 9314,
+      "sha256": "87f5f1f85af06ebdae179bb8a169b43156b13a9dbce4b5352e656de6e0501dbd"
     },
     {
       "path": "tests/package.json",
@@ -5918,8 +5948,8 @@
     },
     {
       "path": "tests/verify.cjs",
-      "bytes": 5821,
-      "sha256": "78e91e72f3a9d959a10dc25a7505acbd446f925879c674fb63bfed964d6b035e"
+      "bytes": 6157,
+      "sha256": "f8eac44814d46e7942fcb8c4593b3161695a93dfc3f1ceefce489a15e2b20d71"
     },
     {
       "path": "wrangler.jsonc",

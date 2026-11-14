@@ -16,6 +16,7 @@ This document covers the record shape, migration `023`, the frontend wiring and 
 | D8 | Lifts record a type (`1rm`, `working_set` or `unknown`), with reps for a working set (§1.5). |
 | D9 | `consent.health_data` is kept and must be `true` to submit (§1.10). |
 | D10 | Retention is configurable in `settings/brand.intake_retention_months` (default 24 months after archive), and the server records each client's archive date in `clients.archived_at` (§8). No deletion job yet. |
+| D11 | The coach can only change the status: reopen an intake, or open an empty reopened one for a client who has none. Answers and the server fields are refused (migration 025, §3.1). |
 
 ---
 
@@ -26,7 +27,7 @@ This document covers the record shape, migration `023`, the frontend wiring and 
 - **Strict shape.** Every group and every key below must be present in every write, drafts included. Unknown keys are rejected at every level. The frontend always sends the full skeleton.
 - **Two levels of validation.** Types and ranges are always checked. A value may be `null` while `status` is `draft` or `reopened`. Completeness (the "Required" column) is checked only when `status` is `submitted`.
 - **Size cap.** `octet_length(data::text) ≤ 65,536`. The table already allows 1 MB per row; intake needs far less.
-- **Server-managed fields** (marked ⚙): `submitted_at`, `submitted_profile` and `health_flag`. The trigger removes whatever any caller sends for them (client, coach or a direct write) and sets them itself.
+- **Server-managed fields** (marked ⚙): `submitted_at`, `submitted_profile` and `health_flag`. The trigger removes whatever a client or a direct write sends for them and sets them itself. A coach who sends a different value is refused (migration 025); leaving them out is fine.
 - **Personal data.** The six existing personal fields are **not** in this record (§5). Only neck and waist are stored here, because they have no other home that every package can write.
 
 ### 1.2 Top level
@@ -355,14 +356,14 @@ Notes on the trigger:
 | Who | When they can write | What they can set |
 |---|---|---|
 | Client | (`clients.status = 'onboarding'` **and** no intake yet or intake is `draft`) **or** intake is `reopened` | `status` ∈ {`draft`, `submitted`}, or `reopened` while it is reopened; a `draft` on a reopened intake is stored as `reopened`. All client fields; server fields are ignored |
-| Coach | always | anything, including `status: 'reopened'`; server fields are ignored for the coach too |
+| Coach (migration 025) | always | Existing intake: the same record with `status` unchanged or `reopened`. No intake: `status: 'reopened'` with the empty skeleton. Anything else is refused with `42501`, naming what cannot change: "The coach cannot change intake answers (health screening). Reopen the intake so the client can update them.", "The coach cannot change the submission date (submitted_at)." (and the same for `submitted_profile` and `health_flag`), "The coach can only reopen an intake. Only the client can save or submit it.", "The coach can only create an intake as reopened, for the client to fill in.", "The coach cannot fill in intake answers. Open an empty intake for the client to complete." |
 | Client, intake `submitted` | refused with `42501` "Your intake has been submitted. Ask your coach to reopen it." | – |
 | Client, any other state (for example `active` with no intake) | refused with `42501` "Your intake is not open. Ask your coach to reopen it." | – |
 
 Consequences:
 
 - Saving a draft is allowed during onboarding. Submitting locks the intake for the client, **even if the client is still `onboarding`**, so the coach never reviews a moving target.
-- Clients who are already `active` when this ships (or whom the coach activates before they finish) cannot start an intake on their own. The coach "requests" one by creating or setting the record to `reopened` (an empty skeleton passes draft validation). The client can then save drafts as often as needed; the intake stays `reopened` until they submit.
+- Clients who are already `active` when this ships (or whom the coach activates before they finish) cannot start an intake on their own. The coach "requests" one by creating the record as `reopened` with the empty skeleton (`panda_private.intake_is_blank`), or by setting an existing draft to `reopened`. The client can then save drafts as often as needed; the intake stays `reopened` until they submit.
 - Pausing or archiving a client still blocks everything through `ready()`.
 - The UI should offer **Save draft** per step, not autosave on every keystroke. Each save writes one `panda_events` row (§7).
 
@@ -391,7 +392,7 @@ Resubmitting replaces the previous submission. If the coach needs history, a lat
 | `16-cloud.js:12` `arrays` | add `'client_intake'` | `assemble()` (`:135`, `:138`) then initialises `s.client_intake=[]` and pushes each loaded row. `flatten()` (`:153`) then emits `put('client_intake', row.id, row)` with no special case: no private split and no history split. Without this, `assemble()` silently drops the kind, because unknown kinds match no branch at `:138`. |
 | `16-cloud.js:153` `flatten()` | `for(const row of s[type]||[])` | `flatten()` also runs on backup states during `restore()`. An older backup has no `client_intake` key, which would throw. |
 | `16-cloud.js:181` commit `order` | optionally append `'client_intake'` after `'clients'` | It already sorts last as an unknown kind (index 99). Making it explicit documents the dependency the trigger snapshot relies on (§2.6). |
-| `16-cloud.js:189` `restore()` | if the backup has no `client_intake` key, copy `before.client_intake` into `after` before `commit` | Otherwise the diff produces deletions (`data:null`) for every intake. Patch C makes the database refuse those, so the **whole restore would fail**. Carrying intakes over keeps restores working and never reverts medical data by accident. |
+| `16-cloud.js:189` `restore()` | always copy `before.client_intake` into `after` before `commit` (since 025; before it, only when the backup had no `client_intake` key) | Intakes belong to the clients and are never restored. Otherwise the diff produces deletions (`data:null`), refused by Patch C, or answer changes, refused by 025, so the **whole restore would fail**. Carrying intakes over keeps restores working and never reverts medical data. |
 | After a successful submit | reload with `snapshot()`, or patch `submitted_at` and `submitted_profile` into state | The server stamps these. Local state lacks them until reload. The diff stays correct either way, because both `before` and `after` lack them, but the UI would show "not submitted" until then. |
 
 Related, outside `16-cloud.js`:
@@ -477,7 +478,7 @@ Controls:
 | 4 | `tests/access-expiry.cjs:52` re-runs `migrations.at(-1)` and calls it 022 | It would re-run 023 instead, under a misleading message, and fail if 023 isn't idempotent. | Make 023 re-runnable (drop-if-exists, markers, `create or replace`); pin the test to 022. |
 | 5 | `FRESH-INSTALL.sql` not updated | New installs that use the SQL-editor path have no intake, and the frontend gets refused saves. | Append 023; update counts in the docs. |
 | 6 | Frontend deployed before the migration | Intake saves fail: the kind check rejects it, or "Access denied" for clients. Loading is unaffected, because `assemble()` ignores unknown kinds. | Deploy order: migration, then frontend. The reverse (new database, old frontend) is harmless. |
-| 7 | `restore()` with a backup that predates intake | The diff deletes every intake. With Patch C the database refuses and the whole restore fails; without Patch C, medical data is lost. | Carry over `before.client_intake` (§4) **and** keep Patch C. |
+| 7 | `restore()` with a backup whose intakes differ from the current ones (missing, older answers) | The diff deletes or rewrites intakes. Patch C and 025 refuse that, so the whole restore fails; without them, medical data is lost or reverted. | Always carry over `before.client_intake` (§4) **and** keep Patch C and 025. |
 | 8 | `flatten()` on a state without `client_intake` | `TypeError` during restore or commit. | `s[type]||[]` plus the default in `PandaRecipes.migrate`. |
 | 9 | A combined `clients` + `client_intake` batch | Any problem in the `clients` row (for example a coach-only field changed by mistake) fails the whole submission with "Only your coach can change assignments and access". | The form edits only the six fields on the client row; add a test for this. |
 | 10 | Event volume | `panda_save` writes one event per record. Autosaving drafts would flood the audit list that both client and coach see. | Explicit save per step. |
@@ -488,6 +489,7 @@ Controls:
 | 15 | Single-coach model | Every coach account can read every intake. This is the same as `client_private` today. | Accepted; note it if multiple coaches are ever supported. |
 | 16 | Seeding the retention setting | Migration 023 adds `intake_retention_months` to `settings/brand` and raises its revision. A coach page open during the upgrade gets a refresh prompt on its next settings save. | Intended: without the bump, that page could save the brand record without the new key. |
 | 17 | Clients archived before migration 024 | Their real archive date is unknown. | 024 stamps them with the upgrade time, so retention counts from the upgrade: data is kept longer, never deleted early. |
+| 18 | Re-running 023 after 025 | 023 re-creates `guard_client_intake()` from its own source, which drops 025's coach patch: the coach could write answers again. | Re-run 025 after any re-run of 023. 025 is idempotent and its post-check confirms the patch. |
 
 ---
 
@@ -509,7 +511,6 @@ Controls:
 
 ## 9. Open questions
 
-1. Should a `health_flag` intake raise a coach attention item before any plan is published? The flag is now stored; showing it is frontend logic in `20-attention.js`.
-2. Deletion job: where it runs (scheduled edge function or `pg_cron`) and whether the coach is warned before an intake is deleted.
+1. Deletion job: where it runs (scheduled edge function or `pg_cron`) and whether the coach is warned before an intake is deleted.
 
-Resolved: lifts store a type with reps for working sets (§1.5); `consent.health_data` is kept (§1.10); retention is 24 months after archive, configurable (§8).
+Resolved: a `health_flag` intake is the coach's first attention item (`20-attention.js`); lifts store a type with reps for working sets (§1.5); `consent.health_data` is kept (§1.10); retention is 24 months after archive, configurable (§8).

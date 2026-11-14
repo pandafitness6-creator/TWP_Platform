@@ -72,7 +72,10 @@ async function sql({PGlite,bootstrap,migrations},pass){
  assert.equal(save_.split('-- Panda client intake: fixed event label.').length,2);assert.equal(read_.split('-- Panda client intake.').length,2);
  assert((await constraint(db,'panda_records_kind_check')).includes("'client_intake'"));assert((await constraint(db,'panda_records_ownership_check')).includes("'client_intake'"));
  const brand=await record(db,'settings','brand');assert.equal(brand.data.intake_retention_months,24);
+ const guard=await definition(db,'panda_private.guard_client_intake()');
  await db.exec(text);
+ // Re-running 023 re-creates guard_client_intake() without 025's coach patch; 025 is re-run after it (database/README.md).
+ await db.exec(migrations.find(([f])=>f.startsWith('202611150025'))[1]);assert.equal(await definition(db,'panda_private.guard_client_intake()'),guard);
  assert.equal(await definition(db,'public.panda_save(jsonb,text)'),save_);assert.equal(await definition(db,'panda_private.readable(text,text,uuid,jsonb)'),read_);
  assert.deepEqual(await record(db,'settings','brand'),brand);
  pass('Migration 023 keeps the 009, 010 and 014 patches, applies patches A–D and the readable() patch exactly once, and re-runs without changes');
@@ -190,8 +193,8 @@ async function sql({PGlite,bootstrap,migrations},pass){
  assert.equal(await flagged(b=>{for(const k of CONDITIONS)b.medical.conditions[k]=!['chest_pain','heart_disease','stroke','coronary_disease','light_headedness','pregnancy'].includes(k);b.medical.exercise_contraindications=answer(false);}),false);
  assert.equal(await flagged(b=>{b.submitted_at='2020-01-01T00:00:00Z';b.submitted_profile={name:'Forged'};}),false);
  let f=await intake(db,ids.fay);assert.equal(f.submitted_at,null);assert.equal(f.submitted_profile,null);
- const coachFlag=blank(ids.fay);coachFlag.health_flag=true;await saveIntake(db,ids.coach,ids.fay,coachFlag);assert.equal((await intake(db,ids.fay)).health_flag,false);
- pass('health_flag is set by the server from chest pain, heart disease, stroke, coronary disease, light-headedness, pregnancy or a contraindication; values sent for it, submitted_at or submitted_profile are ignored');
+ await assert.rejects(async()=>saveIntake(db,ids.coach,ids.fay,{...(await intake(db,ids.fay)),health_flag:true}),/The coach cannot change the health flag/);assert.equal((await intake(db,ids.fay)).health_flag,false);
+ pass('health_flag is set by the server from chest pain, heart disease, stroke, coronary disease, light-headedness, pregnancy or a contraindication; values a client sends for it, submitted_at or submitted_profile are ignored, and the coach\'s are refused (025)');
 
  // 10. Intakes cannot be deleted through panda_save.
  await assert.rejects(async()=>save(db,ids.cara,[{kind:'client_intake',id:ids.cara,data:null,revision:(await record(db,'client_intake',ids.cara)).revision}]),/Referenced records cannot be deleted/);
@@ -217,7 +220,7 @@ async function sql({PGlite,bootstrap,migrations},pass){
 
  // 13. Re-running 023 on a populated database changes nothing.
  const snapshot=async()=>JSON.stringify((await db.query("select kind,id,data,revision from panda_records where owner_id is not null or (kind='settings' and id='brand') order by kind,id")).rows);
- const before=await snapshot();await db.exec(text);assert.equal(await snapshot(),before);assert.equal(await months(),30);
+ const before=await snapshot();await db.exec(text);await db.exec(migrations.find(([f])=>f.startsWith('202611150025'))[1]);assert.equal(await snapshot(),before);assert.equal(await months(),30);
  pass('Re-running migration 023 on a database with intakes leaves every client record and the coach\'s retention setting unchanged');
  await db.close();
 }

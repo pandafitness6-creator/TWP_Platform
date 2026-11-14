@@ -4,6 +4,8 @@
 function derive(state,today){
  const client=state.clients.find(c=>c.id===state.preferences.client_id),pack=state.packages.find(p=>p.id===client?.package_id),has=key=>key==='library'||!!pack?.features.includes(key),items=[];
  if(state.preferences.role==='coach'){
+  // Health screening flags come first: these clients need medical clearance before a plan is written (25-intake.js).
+  if(window.PandaIntake)state.clients.filter(c=>c.status!=='archived').forEach(c=>{const item=PandaIntake.healthItem(state,c);if(item)items.push(item);});
   state.checkins.filter(c=>c.status==='submitted').sort((a,b)=>a.week.localeCompare(b.week)).forEach(c=>items.push({id:'review:'+c.id,kind:'action',icon:'checkins',title:'Review '+(state.clients.find(x=>x.id===c.client_id)?.name||'client')+'’s check-in',detail:'Week of '+c.week,cta:'Open review',action:'review',data:{id:c.id}}));
   // Clients who can still be active but whose access ends within 7 days or has ended, in each client's own timezone.
   const expiry=window.PandaCloud?.expiry;if(expiry)state.clients.filter(c=>c.access_expires_on&&['active','onboarding'].includes(c.status)).map(c=>[c,expiry.daysUntil(c.access_expires_on,expiry.validZone(c.timezone)?c.timezone:expiry.defaultZone(state.brand))]).filter(([,d])=>d<=7).sort((a,b)=>a[1]-b[1]).forEach(([c,d])=>items.push({id:'access:'+c.id,kind:'action',icon:'clock',title:(d<0?'Access ended for ':'Access ending soon for ')+c.name,detail:d<0?'Expired after '+c.access_expires_on+' · renew or archive':d===0?'Last day of access is today':'Access ends in '+d+(d===1?' day':' days')+' · '+c.access_expires_on,cta:'Renew access',action:'client-edit',data:{id:c.id}}));

@@ -78,14 +78,16 @@ async function ui({PGlite,bootstrap,migrations},html,pass){
  assert.deepEqual(restored.client_intake.map(x=>x.id).sort(),[ids.ivy,ids.jo]);assert.deepEqual(S.get().client_intake,loaded.client_intake);
  pass('Restoring a backup without client_intake keeps every intake (no deletion sent, database unchanged) and still applies the backup\'s other changes');
 
- // Contrast: a backup that does list intakes, but none, would delete them; the database refuses and nothing changes.
- const empty=JSON.parse(S.export());empty.client_intake=[];empty.brand={...empty.brand,coach:'Coach Emptied'};
- saves.length=0;
- await assert.rejects(()=>S.restore(empty),/Referenced records cannot be deleted/);
- assert(saves.flat().some(c=>c.kind==='client_intake'&&c.data===null));
- assert.equal(await intakes(),stored);assert.equal((await record(db,'settings','brand')).data.coach,'Coach Restored');
- assert.equal(S.get().client_intake.length,2);
- pass('A backup with an empty client_intake list is refused as a whole (intakes cannot be deleted) and changes nothing');
+ // A backup that lists intakes (none, or different answers) does not touch them either (migration 025:
+ // the coach may only reopen), and its other changes still apply.
+ for(const [n,edit] of [[1,b=>{b.client_intake=[];}],[2,b=>{b.client_intake[0].personal.neck_cm=40;b.client_intake[1].status='submitted';}]]){
+  const backup=JSON.parse(S.export());edit(backup);backup.brand={...backup.brand,coach:'Coach Restored '+n};
+  saves.length=0;await S.restore(backup);
+  assert(!saves.flat().some(c=>c.kind==='client_intake'),'restore sent an intake change');
+  assert.equal(await intakes(),stored);assert.equal((await record(db,'settings','brand')).data.coach,'Coach Restored '+n);
+  assert.deepEqual(S.get().client_intake,loaded.client_intake);
+ }
+ pass('A backup that lists no intakes or different intake answers restores its other changes and leaves every intake as it is (none are sent)');
 
  // Commit order: a batch with a profile edit and an intake saves the profile first.
  saves.length=0;

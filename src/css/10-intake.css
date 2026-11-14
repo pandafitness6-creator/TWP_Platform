@@ -27,6 +27,19 @@
 .intake-outstanding p { margin:0; }
 .intake-summaries { display:grid; gap:var(--space-4); }
 .intake-locked { margin-top:var(--space-6); }
+/* Coach view: read-only intake modal, health flag and client list markers. */
+.notice.danger { border-color:var(--danger); }
+.intake-health-flag>div { min-width:0; }
+.intake-health-flag strong { color:var(--danger); }
+.intake-health-flag p { margin:var(--space-1) 0 0; }
+.intake-coach { display:grid; gap:var(--space-4); }
+.intake-coach-status { display:flex; flex-wrap:wrap; align-items:center; gap:var(--space-3); }
+.intake-coach-status>p { margin:0; flex:1 1 240px; }
+.intake-coach .intake-summaries { margin-top:0; }
+.intake-snapshot-note { margin:0 0 var(--space-3); }
+.intake-coach-actions>.caption { margin:0 0 var(--space-3); }
+.intake-board-status { flex-wrap:wrap; }
+.intake-flag-marker { display:block; margin-top:var(--space-1); }
 @media (max-width:768px) {
  .intake-grid,.intake-equipment { grid-template-columns:minmax(0,1fr); }
  .intake-lift { grid-template-columns:repeat(2,minmax(0,1fr)); }
