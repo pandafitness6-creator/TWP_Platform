@@ -42,9 +42,9 @@ async function sql({PGlite:PG=PGlite,bootstrap,migrations},pass){
  assert(guard.indexOf(MARKER)<guard.indexOf(`new.data:=new.data-'submitted_at'-'submitted_profile'-'health_flag';`));
  assert(guard.includes('if auth.uid() is not null and not panda_private.coach() then'));
  await db.exec(text);assert.equal(await definition(db,'panda_private.guard_client_intake()'),guard);
- // Re-running 023 re-creates the guard without the patch; re-running 025 puts it back.
+ // Re-running 023 re-creates the guard without the patch; re-running 025 (then 026, whose patch 023 also drops) puts it back.
  await db.exec(migrations.find(([f])=>f.startsWith('202611130023'))[1]);assert(!(await definition(db,'panda_private.guard_client_intake()')).includes(MARKER));
- await db.exec(text);assert.equal(await definition(db,'panda_private.guard_client_intake()'),guard);
+ await db.exec(text);await db.exec(migrations.find(([f])=>f.startsWith('202611160026'))[1]);assert.equal(await definition(db,'panda_private.guard_client_intake()'),guard);
  pass('Migration 025 patches guard_client_intake() once, ahead of the server-field handling, keeps the 023 client rules, re-runs without changes, and restores its patch if 023 is re-run');
 
  // Clients: amy and bo submit while onboarding; cy is active with no intake; di is onboarding with a draft.

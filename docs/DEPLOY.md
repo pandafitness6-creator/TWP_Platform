@@ -24,9 +24,9 @@ supabase db push --dry-run
 supabase db push
 ```
 
-This creates all tables, RLS rules, database functions and shipped library content using the 25 migrations in supabase/migrations/. These commands are for your linked project; inspect the project reference before applying them. No separate data seed is needed. See database/MIGRATION-ORDER.txt.
+This creates all tables, RLS rules, database functions and shipped library content using the 26 migrations in supabase/migrations/. These commands are for your linked project; inspect the project reference before applying them. No separate data seed is needed. See database/MIGRATION-ORDER.txt.
 
-Alternative without db push: on a NEW empty Supabase project run database/FRESH-INSTALL.sql in the SQL Editor. It concatenates the same 25 migrations; do NOT use both methods. The combined file does not register CLI migration history. If later switching to CLI updates, compare the schema and mark the actually applied migration versions using supabase migration repair --status applied VERSION (each version is the digits before the underscore in its filename). Do not blindly replay or reset a populated database. CLI migrations are the recommended method.
+Alternative without db push: on a NEW empty Supabase project run database/FRESH-INSTALL.sql in the SQL Editor. It concatenates the same 26 migrations; do NOT use both methods. The combined file does not register CLI migration history. If later switching to CLI updates, compare the schema and mark the actually applied migration versions using supabase migration repair --status applied VERSION (each version is the digits before the underscore in its filename). Do not blindly replay or reset a populated database. CLI migrations are the recommended method.
 
 Enable the email/password Auth provider. Disable public user signup and anonymous sign-in. Accounts use a username mapped internally to username@accounts.panda.invalid; keep that namespace unchanged across frontend, bootstrap script and Edge Function. It is not an email-delivery address. Accounts are created with confirmed email by the server and do not use invitation, recovery or magic-link emails. Leave optional password-change email notifications disabled. Password resets are performed by the coach in the app.
 
@@ -54,6 +54,34 @@ supabase functions deploy panda-accounts --project-ref YOUR_PROJECT_REF
 supabase/config.toml sets verify_jwt=false at the gateway. The function itself validates each request token against Supabase Auth and checks the authoritative account/role table. Keep these checks intact. Its built-in server environment uses SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY and SUPABASE_ANON_KEY. Do not copy server keys into Cloudflare static assets.
 
 If using multiple origins, pass the complete comma-separated PANDA_ALLOWED_ORIGINS value in quotes. Do not allow '*'. When adding a custom domain, update the allowed origins and Supabase Auth URL configuration (Site URL and any needed redirect URLs) to your own addresses. For a separate preview deployment allow that exact preview origin too.
+
+## 4b. Optional: website signup function (panda-signup)
+
+Only needed if your website creates client accounts after payment (SIGNUP-DESIGN.md). The website's server calls `panda-signup` with an HMAC-signed request; the function creates an onboarding client and returns a one-time setup link (48 hours) that the website emails to the customer. The portal itself still sends no email.
+
+Generate two separate random keys (for example `openssl rand -base64 32`, twice). The signing key is shared with the website; the token key never leaves Supabase.
+
+```sh
+supabase secrets set PANDA_SIGNUP_HMAC_KEYS="k1:SIGNING_KEY_BASE64" --project-ref YOUR_PROJECT_REF
+supabase secrets set PANDA_SETUP_TOKEN_KEY="TOKEN_KEY_BASE64" --project-ref YOUR_PROJECT_REF
+supabase secrets set PANDA_PORTAL_URL=https://panda-customer-portal.pages.dev --project-ref YOUR_PROJECT_REF
+supabase functions deploy panda-signup --project-ref YOUR_PROJECT_REF
+```
+
+PANDA_ALLOWED_ORIGINS (section 4) must include the portal address, because the setup page calls this function from the browser. Do NOT add the website's address: its call is server-to-server. Optional: PANDA_SIGNUP_MAX_PER_HOUR (default 60) caps new accounts per hour. Never name these secrets PANDA_PUBLIC_*.
+
+Website side (Laravel): keep the key id and signing key in the website's `.env` (outside the web root, not in git), read them only in `config/services.php`, and never log request headers or response bodies (the response contains the setup link). Each request:
+
+- `POST https://YOUR_PROJECT.supabase.co/functions/v1/panda-signup` with a JSON body, for example `{"action":"create_client","order_ref":"WEB-1001","email":"…","name":"…","slug":"level-3-12-weeks","paid_at":"2026-11-16T10:00:00Z","amount":499,"currency":"AED"}` (amount, currency and paid_at are optional) or `{"action":"resend_setup","order_ref":"WEB-1001"}`.
+- Headers `X-Panda-Key-Id: k1`, `X-Panda-Timestamp: <unix seconds>`, `X-Panda-Nonce: <new UUID per attempt>` and `X-Panda-Signature: v1=<hex HMAC-SHA256(key, canonical)>`, where canonical is `"v1
+" + timestamp + "
+" + nonce + "
+POST
+/panda-signup
+" + hex(SHA-256(exact body bytes))`. In PHP: `hash_hmac('sha256', $canonical, base64_decode($key))`.
+- Branch on the response's `code` and `retryable`, never on `message`. `created` (201) and `already_created` (200) are success; send the email with `setup_url`. Retry `retryable: true` responses (409/429/5xx, honour `Retry-After`) with a new nonce; a timeout is also safe to retry. `email_exists`, `unknown_package` and `order_conflict` need a person.
+
+Rotate the signing key by setting `PANDA_SIGNUP_HMAC_KEYS="k2:NEW,k1:OLD"`, switching the website to k2, then removing k1. The package mapping lives in the `panda_signup_products` table (slug, package, default plans, check-in day, access days); edit it in the Supabase table editor or SQL. An unknown slug is refused, never given a default package.
 
 ## 5. Configure the app and create the initial coach
 
@@ -109,6 +137,8 @@ Intake data is health information. Clients see only their own intake; coach acco
 Intake retention: settings/brand.intake_retention_months sets how many whole months (1–120) a client's intake is kept after the client is archived. Migration 023 sets it to 24 (2 years) if it is not already set; an empty value means intakes are never deleted automatically. There is no automatic deletion yet: the value is stored for a future scheduled job, and until then intake records are removed only when the client's account is deleted.
 
 **Updating to the client archive date (migration 024).** Apply it with `supabase db push` after migration 023; it stops with "review migration 024" and changes nothing if 023 is missing or if panda_save no longer has the client-edit guard it relies on. It adds no table lock and patches no function. From then on the database records when each client is archived (archived_at on the client profile) and removes the date when the client is un-archived; nobody can set it by hand. Clients already archived at upgrade time get the upgrade time as their archive date, so their retention period counts from the upgrade. Safe to re-run.
+
+**Updating to website signup (migration 026).** Apply it with `supabase db push` after migration 025, then build, check and deploy the app, and only then deploy `panda-signup` (section 4b). It stops with "review migration 026" and changes nothing if 025 is missing (or was undone by a re-run of 023: re-run 025, then 026). It lets a client's age, height, weight and goal weight be empty until the client is active, requires age, height and weight before an intake can be submitted, adds the signup tables and the website package mapping, and adds `panda_extend_access(user_id, days)`. Website-created clients start as onboarding with no measurements and no access expiry; their access period starts when they set their password (`panda_signups.access_start_due_at`, 14 days after payment, is recorded for a later job that is not built yet). The coach must set the four measurements before setting such a client to active.
 
 **Updating to the coach intake rule (migration 025).** Apply it with `supabase db push` after migrations 023 and 024; it stops with "review migration 025" and changes nothing if either is missing. From then on a coach account can only change an intake's status: reopen it, or open an empty one for a client who has none. Saves that would change a client's answers, submission date, profile snapshot or health flag are refused with a message naming what cannot change. Deploy the app version from the same release at the same time: its backup restore leaves intakes untouched. With an older app version, restoring a backup whose intakes differ from the current ones is refused as a whole. Migration 025 changes the intake trigger installed by 023. If 023 is ever re-run, re-run 025 afterwards. Safe to re-run; it adds no table lock.
 

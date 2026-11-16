@@ -74,8 +74,8 @@ async function sql({PGlite,bootstrap,migrations},pass){
  const brand=await record(db,'settings','brand');assert.equal(brand.data.intake_retention_months,24);
  const guard=await definition(db,'panda_private.guard_client_intake()');
  await db.exec(text);
- // Re-running 023 re-creates guard_client_intake() without 025's coach patch; 025 is re-run after it (database/README.md).
- await db.exec(migrations.find(([f])=>f.startsWith('202611150025'))[1]);assert.equal(await definition(db,'panda_private.guard_client_intake()'),guard);
+ // Re-running 023 re-creates guard_client_intake() without the 025 and 026 patches; 025 and then 026 are re-run after it (database/README.md).
+ await db.exec(migrations.find(([f])=>f.startsWith('202611150025'))[1]);await db.exec(migrations.find(([f])=>f.startsWith('202611160026'))[1]);assert.equal(await definition(db,'panda_private.guard_client_intake()'),guard);
  assert.equal(await definition(db,'public.panda_save(jsonb,text)'),save_);assert.equal(await definition(db,'panda_private.readable(text,text,uuid,jsonb)'),read_);
  assert.deepEqual(await record(db,'settings','brand'),brand);
  pass('Migration 023 keeps the 009, 010 and 014 patches, applies patches A–D and the readable() patch exactly once, and re-runs without changes');
@@ -220,7 +220,7 @@ async function sql({PGlite,bootstrap,migrations},pass){
 
  // 13. Re-running 023 on a populated database changes nothing.
  const snapshot=async()=>JSON.stringify((await db.query("select kind,id,data,revision from panda_records where owner_id is not null or (kind='settings' and id='brand') order by kind,id")).rows);
- const before=await snapshot();await db.exec(text);await db.exec(migrations.find(([f])=>f.startsWith('202611150025'))[1]);assert.equal(await snapshot(),before);assert.equal(await months(),30);
+ const before=await snapshot();await db.exec(text);await db.exec(migrations.find(([f])=>f.startsWith('202611150025'))[1]);await db.exec(migrations.find(([f])=>f.startsWith('202611160026'))[1]);assert.equal(await snapshot(),before);assert.equal(await months(),30);
  pass('Re-running migration 023 on a database with intakes leaves every client record and the coach\'s retention setting unchanged');
  await db.close();
 }

@@ -14,6 +14,10 @@ const settings=['brand','strategy','roadmap','swaps','measurement_defs','exercis
 const clone=structuredClone, equal=(a,b)=>JSON.stringify(a)===JSON.stringify(b), key=(k,id)=>k+'/'+id;
 try {const saved=JSON.parse(localStorage.getItem(configKey)||'null');if(saved&&!config.supabaseUrl)config={...config,...saved};}catch{}
 try {const saved=JSON.parse(sessionStorage.getItem(sessionKey)||'null');if(saved?.project===config.supabaseUrl)session=saved.session;}catch{}
+// One-time password-setup link from the website signup (#setup=<token>, migration 026). The token is kept
+// for this tab only and removed from the address bar at once, so it is not left in history or bookmarks.
+const setupKey='panda:setup:v1';let setupToken=null;
+try {const m=/^#setup=([A-Za-z0-9_-]{43})$/.exec(location.hash||'');if(m){setupToken=m[1];sessionStorage.setItem(setupKey,setupToken);history.replaceState(null,'',location.pathname+location.search+'#/');}else setupToken=sessionStorage.getItem(setupKey);}catch{}
 function configured(){return !!config.supabaseUrl&&!!config.publishableKey;}
 function publicConfig(input){
  const url=new URL(String(input.supabaseUrl).trim());
@@ -206,6 +210,16 @@ async function changePassword(current,password){
 }
 async function createClient(profile,login,password){const check=PandaServices.get();check.clients.push(clone(profile));if(!check.preferences.client_id)check.preferences.client_id=profile.id;PandaServices.validate(check);const result=await accountCommand('create_client',{profile,username:username(login),password});try{await snapshot();}catch(err){result.refresh_error=err.message;}return result;}
 async function resetPassword(user_id,password){return accountCommand('reset_password',{user_id,password});}
+// Setup link: check_setup only reads; complete_setup consumes the token, sets the password and signs in.
+async function setupCommand(action,body={}){if(!configured())throw Error('The portal has not been connected yet.');if(!setupToken)throw Error('This setup link is no longer available. Open the link from your email again.');return raw('/functions/v1/panda-signup',{method:'POST',body:{action,token:setupToken,...body}},false);}
+async function checkSetup(){return setupCommand('check_setup');}
+async function completeSetup(password){
+ if(password.length<12||password.length>128)throw Error('Use 12–128 characters for your password.');
+ const r=await setupCommand('complete_setup',{password});clearSetup();
+ if(r.session){saveSession({...r.session,expires_at:r.session.expires_at||Math.floor(Date.now()/1000)+r.session.expires_in});mode='online';blocked=null;resetWarning();await snapshot();}
+ return r;
+}
+function clearSetup(){setupToken=null;try{sessionStorage.removeItem(setupKey);}catch{}}
 async function start(){if(mode==='demo')return;if(!configured()){signal('setup');return;}if(session){try{await snapshot();}catch(err){connected=false;signal('signed-out');throw err;}}}
 function configure(values){config={...config,...publicConfig(values)};blocked=null;localStorage.setItem(configKey,JSON.stringify(config));saveSession(null);mode='online';signal('signed-out');}
 function demo(){mode='demo';blocked=null;connected=false;PandaServices.clearCloud();signal('demo');}
@@ -235,7 +249,7 @@ function watchChat(onChange,onStatus){
  connect();return ()=>{stopped=true;clearTimeout(retry);cleanup();};
 }
 
-window.PandaCloud={chatRPC,watchChat,configured,configure,publicConfig,start,signIn,signOut,changePassword,createClient,resetPassword,refresh:snapshot,demo,blankProfile,generatePassword,checkAccess,accessWarning,dismissWarning,
+window.PandaCloud={chatRPC,watchChat,configured,configure,publicConfig,start,signIn,signOut,changePassword,createClient,resetPassword,checkSetup,completeSetup,clearSetup,get setupToken(){return setupToken;},refresh:snapshot,demo,blankProfile,generatePassword,checkAccess,accessWarning,dismissWarning,
  expiry:{DEFAULT_TZ,defaultZone,validZone,localDay,addDays,endsAt,daysUntil,addMonths,warningLevel,warningText,endText,paidText,offsetLabel,cityName,countryName,zoneLabel,countries,messages:accessMessages},get access(){return access?clone(access):null},get blocked(){return blocked?clone(blocked):null},
  get mode(){return mode},get ready(){return connected},get account(){return account?clone(account):null},get accounts(){return clone(accountRows)},get status(){return status},get busy(){return busy},get settings(){return {supabaseUrl:config.supabaseUrl,publishableKey:config.publishableKey,authDomain:config.authDomain}}};
 })();

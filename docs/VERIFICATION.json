@@ -1,7 +1,7 @@
 {
   "date": "2026-10-02",
   "checks": [
-    "All 25 migrations install into a fresh PostgreSQL test database",
+    "All 26 migrations install into a fresh PostgreSQL test database",
     "No customer or coach accounts seeded",
     "All three v0.9.16 training articles seeded",
     "RLS enabled; anonymous record reads denied",
@@ -44,6 +44,23 @@
     "The coach cannot forge submitted_at, submitted_profile or health_flag (changed or cleared), on an existing intake or a new one, and each refusal names the field",
     "The coach can still reopen a submitted intake or a draft (only the status changes; answers, submitted_at, the snapshot and the flag are kept), and the client can then edit and resubmit",
     "The coach can open an empty reopened intake for a client who has none (any answer, or another status, is refused), and the client can then fill it in",
+    "Migration 026 aborts before patching when 025 is missing or was undone by a 023 re-run, and leaves the database unchanged",
+    "Migration 026 patches validate_profile and guard_client_intake in place (023 and 025 rules kept), re-runs without changes, and survives a 023 → 025 → 026 re-run",
+    "The six website slugs are seeded (essential, nutrition_only, coaching × 28/84 days); signup tables and RPCs are closed to anon and signed-in users",
+    "A valid signed request creates an onboarding client (null measurements, mapped package and plans, no access expiry yet), a 48-hour setup link stored only as a hash, and an Auth user under the internal domain",
+    "Bad signatures are refused with 401 bad_signature (changed body, wrong key, unsigned), an unknown key id with unknown_key, and a signed request from a browser origin with 403; nothing is created",
+    "Requests whose timestamp is more than 5 minutes old or ahead are refused with 401 stale_timestamp, and the skew is reported",
+    "Replaying a request with a nonce already seen is refused with 409 nonce_reused and returns no setup link",
+    "A duplicate order_ref returns 200 already_created with the same setup link and username (one account); the same order_ref with different details is 409 order_conflict; the previous signing key still works during rotation",
+    "A second order for an existing email is 409 email_exists; an unknown or inactive slug is 422 unknown_package with nothing stored; invalid or unexpected fields are 400 invalid_request naming the field",
+    "A mapping that points at an unpublished plan is 503 portal_configuration (retryable, Retry-After, reason given); when it breaks mid-signup the account is rolled back and the Auth user removed; after the fix the same order succeeds",
+    "An Auth outage is 503 upstream_unavailable and leaves no login; a lost response leaves the claim in progress (409 in_progress, Retry-After 30), and a later retry finishes with the same Auth user",
+    "The setup token is never used by GET, HEAD or PUT (405); check_setup only reads it (returns the username, consumes nothing); other origins are refused; a weak password consumes nothing",
+    "complete_setup sets the password (an outage gives the link back), opens the account, starts the 28-day access period that day in the client’s timezone, and signs the client in",
+    "A consumed token is refused (410 token_used) and the password stays; replaying the order after setup reports setup_completed without a link, and access is not extended twice",
+    "An expired token is refused (410 token_expired) and the account stays locked; resend_setup issues a new 48-hour link and the older links stop working; unknown tokens are token_invalid",
+    "Website-created clients may keep null measurements while onboarding (and can be archived), but the intake cannot be submitted without age, height and weight, and the coach cannot activate them until all four are set",
+    "panda_extend_access(user_id, days) is repeatable: it adds days to an unexpired period, restarts from today after expiry, keeps panda_accounts in step and never moves end_date back",
     "Latest source initializes without JS runtime errors and without a backend connection",
     "Expiry rules in the browser: 7/3/1-day tiers, wording, zone labels, and end instants identical to Postgres in every tested zone (DST included)",
     "Expired login shows the expired message with the coach support contact and leaves no session behind",
@@ -77,7 +94,9 @@
     "The coach cannot edit intake answers: the intake view has no form controls, opening it sends nothing, and the coach has no intake form of their own",
     "Reopen intake asks for confirmation (nothing is sent if cancelled), then changes only the status to reopened; answers, submitted date and snapshot are kept, and the list updates",
     "After the coach reopens it, the client can edit the intake again (drafts stay reopened) and resubmit it",
-    "For an active client with no intake the coach can open one (stored as an empty reopened intake the client can then fill in); an onboarding client needs no action"
+    "For an active client with no intake the coach can open one (stored as an empty reopened intake the client can then fill in); an onboarding client needs no action",
+    "A website-created client (null measurements) loads into the coach portal and passes PandaServices.validate, so the coach can keep saving; validate refuses to activate it before the measurements are set",
+    "The setup link opens a \"Set your password\" form showing the username (the token leaves the address bar and is not used until submit); saving signs the client in; a used link says so and leads back to sign-in"
   ],
   "limits": [
     "No live deployment performed",

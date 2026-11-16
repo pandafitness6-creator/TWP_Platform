@@ -1,2 +1,5 @@
 [functions.panda-accounts]
 verify_jwt = false
+
+[functions.panda-signup]
+verify_jwt = false

@@ -53,18 +53,18 @@
     },
     {
       "path": "database/FRESH-INSTALL.sql",
-      "bytes": 945108,
-      "sha256": "09860e47f1558d2617aac77b0bbc0df9c134c0a250f4405e60d98e5ff002a663"
+      "bytes": 980748,
+      "sha256": "50e1491976f0e2ee11e3ddef4a665aa570fb0a6808ceb2f9800adab3bd326e7e"
     },
     {
       "path": "database/MIGRATION-ORDER.txt",
-      "bytes": 845,
-      "sha256": "babec853a42e1b28c529f168e21becfb3fec44e6c223e0749e5436862760858a"
+      "bytes": 877,
+      "sha256": "e765c8ae49840102bad56440e25ae96f6ea65d1d3dba9105347e870feff0775b"
     },
     {
       "path": "database/README.md",
-      "bytes": 3633,
-      "sha256": "494e0c04900715e714a33734ed9f684117d90c4045a2b5574c8e425f949c8604"
+      "bytes": 4918,
+      "sha256": "23bffacaa3accf66c60f953a39ab7a42479fe70d2e1ba592a2cd3706e7530afb"
     },
     {
       "path": "docs/ACCEPTANCE.md",
@@ -73,8 +73,8 @@
     },
     {
       "path": "docs/DEPLOY.md",
-      "bytes": 12356,
-      "sha256": "f50f15e2223e72317782641b33fcf4315b9d380144c96290c6496da26739f795"
+      "bytes": 16196,
+      "sha256": "b0836006660af99a21efed1e5d4c3f4874ac8029d3ae5dc256bebb251d7c4091"
     },
     {
       "path": "docs/PRIVACY-CHECK.json",
@@ -88,8 +88,8 @@
     },
     {
       "path": "docs/VERIFICATION.json",
-      "bytes": 10669,
-      "sha256": "8f5c981b00fc4f58bce23cfe67d082a306d149397023190df7f734017c0c472b"
+      "bytes": 14245,
+      "sha256": "77a4ffab8836e7012892f2634cb0ec84f9b45c33de594fc6d047f1d24f6b6357"
     },
     {
       "path": "history/CHANGELOG.md",
@@ -195,6 +195,11 @@
       "path": "scripts/restructure/extract-media.mjs",
       "bytes": 3177,
       "sha256": "40311906d5882dde4f97414eaac30c29bc1a6d9d0fdfe6686ac10613760f5d48"
+    },
+    {
+      "path": "SIGNUP-DESIGN.md",
+      "bytes": 41764,
+      "sha256": "7988222a405bbaff556f1611a9d8e0e04475024bee229d513a998c70ff49974a"
     },
     {
       "path": "src/css/01-visual-system.css",
@@ -448,13 +453,13 @@
     },
     {
       "path": "src/js/15-services.js",
-      "bytes": 23390,
-      "sha256": "3f04829ed034ed825ead95f490cc04536be0137cf6cbcfa0c512794b59678038"
+      "bytes": 23741,
+      "sha256": "0c600a2bdacb3130da78dbafde2ce431128cd857711bddf0ccef86e334810dc9"
     },
     {
       "path": "src/js/16-cloud.js",
-      "bytes": 27571,
-      "sha256": "4e28f37a38b98e619f1e6240ca0b4dfaa35aea52034e2e22ae4af7f51e11871d"
+      "bytes": 29170,
+      "sha256": "575adf46751b0767f912f6f247ef569b1cd73b158702d3ca5044a0e7d8a463ad"
     },
     {
       "path": "src/js/17-chat-badge.js",
@@ -493,8 +498,8 @@
     },
     {
       "path": "src/js/24-account-ui.js",
-      "bytes": 20117,
-      "sha256": "3097ed4fa910f19fd4d26b0f401059818e2ad395a29268f12813a9156af18bfb"
+      "bytes": 23783,
+      "sha256": "8c90db4b6905324cd464c25ee7c8d865921677d906e3aa9e0cecd1d97a48314a"
     },
     {
       "path": "src/js/25-calories.js",
@@ -508,8 +513,8 @@
     },
     {
       "path": "src/js/26-portal.js",
-      "bytes": 344868,
-      "sha256": "2268653d54d18451e3b96f5148988a2c4750540a7c199ef493cfa28bb4c62584"
+      "bytes": 345289,
+      "sha256": "761f5573ce7f6f20a43266755414f708cbf844d10997d6e5cdf24b5cdb6bb0ad"
     },
     {
       "path": "src/js/manifest.json",
@@ -5773,13 +5778,23 @@
     },
     {
       "path": "supabase/config.toml",
-      "bytes": 46,
-      "sha256": "818edd4d8edcda2f989f0f72963c87b93322d644223f44dc1c24a9982b14db23"
+      "bytes": 91,
+      "sha256": "0c37cb51b9903dd918e6c5ceb9856b32a1b05613df670ee4392ab20d8f3ae27e"
     },
     {
       "path": "supabase/functions/panda-accounts/index.ts",
       "bytes": 7622,
       "sha256": "ce46983ecf1c5333be25d2df2e62f39ed1f847645a305e0a8ad370d5ef149478"
+    },
+    {
+      "path": "supabase/functions/panda-signup/handler.js",
+      "bytes": 18109,
+      "sha256": "4357f8f9f4a53a268d0db3962ed3072a2e1353ddcfd41e1ff55a12415220dddf"
+    },
+    {
+      "path": "supabase/functions/panda-signup/index.ts",
+      "bytes": 703,
+      "sha256": "23742ed62fd602641e2ac81c738552bcb3733212300e2e73df3cd37f77c318a1"
     },
     {
       "path": "supabase/migrations/202609120001_portal.sql",
@@ -5907,6 +5922,11 @@
       "sha256": "eee1caa968df26ca05db7113b33682b5a7fd9938cd12a8f8ff788b02dd0287ef"
     },
     {
+      "path": "supabase/migrations/202611160026_website_signup.sql",
+      "bytes": 35592,
+      "sha256": "8ef1ff69110bffbac06d7e157756947fd63c30a3afcb6e44e817f80451f54207"
+    },
+    {
       "path": "tests/access-expiry.cjs",
       "bytes": 37281,
       "sha256": "c0de189e7581453fb122a52e981bb4169ec84acf28f9f336439851dfac410ffc"
@@ -5918,13 +5938,13 @@
     },
     {
       "path": "tests/client-intake.cjs",
-      "bytes": 23832,
-      "sha256": "3a137f96856480b1e0fe834db6019d5bb3bd5fc545b038bd8fdfea38217a7b2d"
+      "bytes": 23994,
+      "sha256": "95a45b579f8e7daeef7189702fa8cfa5f1f14ec08572174d6e9f95d4e162bb62"
     },
     {
       "path": "tests/coach-intake-guard.cjs",
-      "bytes": 10842,
-      "sha256": "99b9c65e9f254d78d7e20b354e2c047449dc0d87a7be7e19bb8d8ba04653086a"
+      "bytes": 10952,
+      "sha256": "53dbac96e1a00bfa53034e30d6000e579e54aa48aec4c0f22703dcd04145f81b"
     },
     {
       "path": "tests/intake-coach.cjs",
@@ -5948,8 +5968,13 @@
     },
     {
       "path": "tests/verify.cjs",
-      "bytes": 6157,
-      "sha256": "f8eac44814d46e7942fcb8c4593b3161695a93dfc3f1ceefce489a15e2b20d71"
+      "bytes": 6327,
+      "sha256": "349a8ce0fe164f56e13a88e242513f15fab86769d3cb24e571455e6e52c20257"
+    },
+    {
+      "path": "tests/website-signup.cjs",
+      "bytes": 39498,
+      "sha256": "75180a68da0c7fd37493e1353a36df687323d07fb4591b4ff479ea741d04ae14"
     },
     {
       "path": "wrangler.jsonc",
